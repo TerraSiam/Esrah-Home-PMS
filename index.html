@@ -345,6 +345,12 @@
     html { overflow-x: hidden; }
     body { font-size: 13px; overflow-x: hidden; width: 100%; }
     .wrap { padding: 12px 10px 40px; overflow-x: hidden; }
+    /* Le celle di grid/flex (calendario, statistiche, liste) hanno di default una
+       larghezza minima "auto" basata sul loro contenuto: se un numero o un'etichetta
+       e piu larga della colonna disponibile, l'intera griglia si allarga oltre lo
+       schermo invece di andare a capo. Azzerare min-width lascia che testo/ellissi
+       facciano il loro lavoro e la pagina resti sempre dentro lo schermo. */
+    * { min-width: 0; }
     .hero { height: 150px; border-radius: 14px; }
     .hero-content { padding: 12px 14px; }
     .property-name { font-size: 19px; max-width: 100%; }
