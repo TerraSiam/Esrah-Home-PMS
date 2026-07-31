@@ -160,6 +160,11 @@
   .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
   .stat-value { font-size: 18px; font-weight: 800; margin-top: 4px; color: var(--accent); }
   .stat-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat-card-clickable { cursor: pointer; transition: box-shadow .12s ease, transform .05s ease; }
+  .stat-card-clickable:hover { box-shadow: 0 0 0 2px var(--brand), var(--shadow); }
+  .stat-card-clickable:active { transform: translateY(1px); }
+  .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .card-header-row h2 { margin: 0; }
 
   .layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; align-items: start; }
   @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
@@ -212,6 +217,13 @@
   }
   .cal-bar-clean {
     box-shadow: 0 0 0 1px rgba(6,95,70,.35);
+    font-weight: 800;
+  }
+  /* Le pulizie "extra" (non legate a un check-out) hanno un bordo tratteggiato invece
+     dell'anello continuo, cosi si distinguono a colpo d'occhio da quelle ordinarie. */
+  .cal-bar-clean-extra {
+    box-shadow: none;
+    border: 1.5px dashed rgba(28,25,23,.5);
     font-weight: 800;
   }
   /* Indicatore di check-in/check-out a metà cella: una barra colorata occupa solo
@@ -435,7 +447,7 @@
     </div>
     <div class="usd-banner">
       <div>
-        <div class="label">Totale incassi di sempre (tutte le prenotazioni)</div>
+        <div class="label">Totale incassi di sempre (tutte le prenotazioni, anche future)</div>
         <div class="value-row">
           <div class="value" id="usdTotal">$0</div>
           <div class="value-thb" id="thbTotal">฿0</div>
@@ -485,12 +497,13 @@
           <span><span class="dot" style="background:var(--clean-unscheduled)"></span>▨ Pulizia da pianificare</span>
           <span><span class="dot" style="background:var(--clean)"></span>▨ Pulizia pianificata</span>
           <span><span class="dot" style="background:var(--clean-done)"></span>▨ Pulizia fatta</span>
+          <span><span class="dot" style="background:var(--clean);border:1.5px dashed rgba(28,25,23,.55)"></span>✦ Pulizia extra</span>
         </div>
       </div>
 
       <div class="card">
         <h2>ADR e occupazione per periodo</h2>
-        <p class="hint">Scegli un intervallo di date per calcolare occupazione, ADR e ricavi (in USD) di quel periodo specifico.</p>
+        <p class="hint">Scegli un intervallo di date: occupazione, ADR e ricavi (in USD) si aggiornano in automatico.</p>
         <div class="period-inputs">
           <div class="field">
             <label>Dal</label>
@@ -500,21 +513,36 @@
             <label>Al</label>
             <input type="date" id="periodTo" />
           </div>
-          <button class="btn-primary btn-small" id="calcPeriodBtn">Calcola</button>
         </div>
         <div class="period-results" id="periodResults"></div>
       </div>
     </div>
 
     <div>
-      <div class="card">
+      <div class="card" id="cleaningSection">
         <h2>Prossime pulizie</h2>
         <p class="hint">Pulizie generate dai check-out e pulizie extra, con costo se inserito.</p>
         <div id="cleaningList"></div>
       </div>
-      <div class="card">
-        <h2>Tutte le prenotazioni</h2>
-        <div id="bookingList"></div>
+      <div class="card" id="bookingsSection">
+        <div class="card-header-row">
+          <h2>Tutte le prenotazioni</h2>
+          <button class="btn-small" type="button" id="bookingsToggleBtn" aria-expanded="true">Comprimi ▾</button>
+        </div>
+        <div id="bookingsBody">
+          <div class="period-inputs" style="margin-bottom:12px;">
+            <div class="field">
+              <label>Dal</label>
+              <input type="date" id="bookingsFilterFrom" />
+            </div>
+            <div class="field">
+              <label>Al</label>
+              <input type="date" id="bookingsFilterTo" />
+            </div>
+            <button class="btn-small" type="button" id="bookingsFilterReset">Mostra tutte</button>
+          </div>
+          <div id="bookingList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -948,17 +976,25 @@
     const cards = [
       { label: 'Prossimo check-in', value: nextCheckin ? fmtDate(nextCheckin.checkin) : '—', sub: nextCheckin ? (nextCheckin.guest + ' · ' + SOURCE_LABELS[nextCheckin.source]) : 'Nessuna prenotazione futura' },
       { label: 'Prossimo check-out', value: nextCheckout ? fmtDate(nextCheckout.checkout) : '—', sub: nextCheckout ? (nextCheckout.guest + ' · ' + SOURCE_LABELS[nextCheckout.source]) : '—' },
-      { label: 'Pulizie da fare (14gg)', value: pendingCleanings, sub: unscheduledCleanings > 0 ? (unscheduledCleanings + ' ancora da pianificare') : 'tutte pianificate' },
+      { label: 'Pulizie da fare (14gg)', value: pendingCleanings, sub: unscheduledCleanings > 0 ? (unscheduledCleanings + ' ancora da pianificare') : 'tutte pianificate', id: 'statCleaningCard', clickable: true },
       { label: 'Occupazione ' + MONTHS[m].toLowerCase(), value: monthStats.occPct + '%', sub: monthStats.occupiedNights + ' / ' + monthStats.totalNights + ' notti' },
       { label: 'ADR ' + MONTHS[m].toLowerCase(), value: monthStats.adr != null ? fmtUSD(monthStats.adr) : '—', sub: monthStats.adr != null ? 'tariffa media/notte' : 'nessun prezzo inserito' },
       { label: 'Costo pulizie ' + MONTHS[m].toLowerCase(), value: fmtUSD(monthCleaningCost.totalUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(monthCleaningCost.totalUSD)) + '</span>', sub: monthCleaningCost.count + ' pulizie con costo inserito' },
     ];
     document.getElementById('statsRow').innerHTML = cards.map(c => `
-      <div class="stat-card">
+      <div class="stat-card${c.clickable ? ' stat-card-clickable' : ''}"${c.id ? ` id="${c.id}"` : ''}>
         <div class="stat-label">${c.label}</div>
         <div class="stat-value">${c.value}</div>
         <div class="stat-sub">${c.sub}</div>
       </div>`).join('');
+    // La card "Pulizie da fare" porta direttamente alla lista "Prossime pulizie" sotto,
+    // sia su desktop che da mobile/app installata.
+    const cleaningStatCard = document.getElementById('statCleaningCard');
+    if (cleaningStatCard) {
+      cleaningStatCard.addEventListener('click', () => {
+        document.getElementById('cleaningSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
 
   // ---------- period card ----------
@@ -1003,7 +1039,6 @@
         <div class="stat-sub">${c.sub}</div>
       </div>`).join('');
   }
-  document.getElementById('calcPeriodBtn').addEventListener('click', renderPeriodStats);
   periodFromEl.addEventListener('change', renderPeriodStats);
   periodToEl.addEventListener('change', renderPeriodStats);
 
@@ -1115,10 +1150,10 @@
         if (iso === c.date) {
           const meta = cleanStatusMeta(c.status || 'scheduled');
           const bar = document.createElement('div');
-          bar.className = 'cal-bar cal-bar-clean';
+          bar.className = 'cal-bar cal-bar-clean cal-bar-clean-extra';
           bar.style.background = meta.color;
           bar.style.color = meta.text;
-          bar.textContent = '▨ ' + (c.time || '') + ' extra';
+          bar.textContent = '✦ ' + (c.time || '') + ' extra';
           bar.title = 'Pulizia extra — ' + (c.time || '') + ' (' + meta.shortLabel + ')' + (c.cost ? ' — ' + c.cost + ' ' + c.currency : '') + ' — clicca per modificare';
           bar.addEventListener('click', (e) => { e.stopPropagation(); openCleaningModal(c.id); });
           cell.appendChild(bar);
@@ -1199,11 +1234,21 @@
   }
 
   // ---------- booking list ----------
+  const bookingsFilterFromEl = document.getElementById('bookingsFilterFrom');
+  const bookingsFilterToEl = document.getElementById('bookingsFilterTo');
   function renderBookingList(){
-    const sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
+    let sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
+    const filterFrom = bookingsFilterFromEl.value;
+    const filterTo = bookingsFilterToEl.value;
+    const filterActive = filterFrom && filterTo && filterTo >= filterFrom;
+    if (filterActive) {
+      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom, checkout: addDays(filterTo, 1) }));
+    }
     const el = document.getElementById('bookingList');
     if (!sorted.length) {
-      el.innerHTML = '<div class="empty-state">Nessuna prenotazione. Aggiungine una con "+ Nuova prenotazione" o cliccando sul calendario.</div>';
+      el.innerHTML = filterActive
+        ? '<div class="empty-state">Nessuna prenotazione in questo periodo.</div>'
+        : '<div class="empty-state">Nessuna prenotazione. Aggiungine una con "+ Nuova prenotazione" o cliccando sul calendario.</div>';
       return;
     }
     el.innerHTML = sorted.map(b => {
@@ -1231,6 +1276,23 @@
       elm.addEventListener('click', () => openModal(elm.getAttribute('data-edit')));
     });
   }
+  bookingsFilterFromEl.addEventListener('change', renderBookingList);
+  bookingsFilterToEl.addEventListener('change', renderBookingList);
+  document.getElementById('bookingsFilterReset').addEventListener('click', () => {
+    bookingsFilterFromEl.value = '';
+    bookingsFilterToEl.value = '';
+    renderBookingList();
+  });
+  // Comprimi/espandi la lista "Tutte le prenotazioni" (utile soprattutto da mobile
+  // con tante prenotazioni salvate).
+  document.getElementById('bookingsToggleBtn').addEventListener('click', () => {
+    const body = document.getElementById('bookingsBody');
+    const btn = document.getElementById('bookingsToggleBtn');
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? '' : 'none';
+    btn.textContent = collapsed ? 'Comprimi ▾' : 'Espandi ▸';
+    btn.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
+  });
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
