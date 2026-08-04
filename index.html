@@ -1019,6 +1019,9 @@
     const sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
     const nextCheckin = sorted.find(b => b.checkin >= today);
     const nextCheckout = [...state.bookings].sort((a,b)=>a.checkout.localeCompare(b.checkout)).find(b => b.checkout >= today);
+    const nextCleaning = allCleaningEntries()
+      .filter(c => c.date >= today && c.status !== 'done')
+      .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))[0];
     const pendingCleanings = allCleaningEntries().filter(c => c.status !== 'done' && c.date <= addDays(today,14)).length;
     const unscheduledCleanings = allCleaningEntries().filter(c => c.status === 'unscheduled').length;
 
@@ -1031,6 +1034,7 @@
     const cards = [
       { label: 'Prossimo check-in', value: nextCheckin ? fmtDate(nextCheckin.checkin) : '—', sub: nextCheckin ? (nextCheckin.guest + ' · ' + SOURCE_LABELS[nextCheckin.source]) : 'Nessuna prenotazione futura' },
       { label: 'Prossimo check-out', value: nextCheckout ? fmtDate(nextCheckout.checkout) : '—', sub: nextCheckout ? (nextCheckout.guest + ' · ' + SOURCE_LABELS[nextCheckout.source]) : '—' },
+      { label: 'Prossima pulizia pianificata', value: nextCleaning ? fmtDate(nextCleaning.date) : '—', sub: nextCleaning ? (nextCleaning.label + (nextCleaning.time ? ' · ore ' + nextCleaning.time : '') + ' · ' + cleanStatusMeta(nextCleaning.status).shortLabel) : 'Nessuna pulizia in programma' },
       { label: 'Pulizie da fare (14gg)', value: pendingCleanings, sub: unscheduledCleanings > 0 ? (unscheduledCleanings + ' ancora da pianificare') : 'tutte pianificate', id: 'statCleaningCard', clickable: true },
       { label: 'Occupazione ' + MONTHS[m].toLowerCase(), value: monthStats.occPct + '%', sub: monthStats.occupiedNights + ' / ' + monthStats.totalNights + ' notti' },
       { label: 'ADR ' + MONTHS[m].toLowerCase(), value: monthStats.adr != null ? fmtUSD(monthStats.adr) : '—', sub: monthStats.adr != null ? 'tariffa media/notte' : 'nessun prezzo inserito' },
@@ -1239,9 +1243,11 @@
 
   // ---------- cleaning list ----------
   function renderCleaningList(){
-    const today = addDays(todayISO(), -1);
+    const today = todayISO();
+    // Solo pulizie da oggi in poi e non ancora completate: una volta segnata "fatta"
+    // (o se la data è passata) sparisce da questa lista.
     const upcoming = allCleaningEntries()
-      .filter(c => c.date >= today)
+      .filter(c => c.date >= today && c.status !== 'done')
       .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))
       .slice(0, 10);
     const el = document.getElementById('cleaningList');
