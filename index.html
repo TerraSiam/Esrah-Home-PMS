@@ -501,6 +501,7 @@
           <span><span class="dot" style="background:var(--clean)"></span>▨ Pulizia pianificata</span>
           <span><span class="dot" style="background:var(--clean-done)"></span>▨ Pulizia fatta</span>
           <span><span class="dot" style="background:var(--clean);border:1.5px dashed rgba(28,25,23,.55)"></span>✦ Pulizia extra</span>
+          <span>🔒 Sincronizzato da Airbnb/Booking (sola consultazione)</span>
         </div>
       </div>
 
@@ -704,6 +705,11 @@
 <script>
 (function(){
   const STORAGE_KEY = 'airbnb_booking_calendar_v1';
+  // URL del "Web App" di Google Apps Script (vedi Code.gs). Finche' resta vuoto l'app si
+  // comporta esattamente come prima, solo su questo dispositivo. Una volta impostato,
+  // legge/scrive le prenotazioni su un Google Sheet condiviso, che a sua volta si
+  // sincronizza (apertura/chiusura date) con Airbnb e Booking.com.
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzpXRS9IGh2WDkMV7w2gF045fPyA4MDDoKCjYBLM3Z9tF3Q5c9CkSjUE3UyxXn-mDtC/exec';
   const SOURCE_COLORS = { airbnb: 'var(--airbnb)', booking: 'var(--booking)', diretta: 'var(--diretta)', altro: 'var(--altro)' };
   const SOURCE_LABELS = { airbnb: 'Airbnb', booking: 'Booking', diretta: 'Diretta', altro: 'Altro' };
   const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -787,6 +793,41 @@
   }
   function save(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ---------- backend sync (Google Apps Script, opzionale) ----------
+  function backendEnabled(){ return !!WEBAPP_URL; }
+  // Invio "fire and forget": non blocca l'interfaccia. Se fallisce (offline, ecc.) i
+  // dati restano comunque salvati in locale su questo dispositivo (vedi save()).
+  function postToBackend(action, payload){
+    if (!backendEnabled()) return;
+    fetch(WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action, ...payload }) })
+      .catch(() => { console.warn('Sincronizzazione col server non riuscita: ' + action); });
+  }
+  async function refreshFromBackend(){
+    if (!backendEnabled()) return;
+    try {
+      const res = await fetch(WEBAPP_URL + '?action=data');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data || !Array.isArray(data.bookings)) return;
+      if (!data.rates) data.rates = { ...DEFAULT_RATES };
+      data.rates.USD = 1;
+      if (!data.cleanings) data.cleanings = [];
+      data.bookings.forEach(b => {
+        if (!b.currency) b.currency = 'THB';
+        if (!b.cleaningTime) b.cleaningTime = '11:00';
+        if (!b.cleaningCostCurrency) b.cleaningCostCurrency = 'THB';
+        if (!b.cleaningStatus) b.cleaningStatus = 'scheduled';
+      });
+      data.cleanings.forEach(c => { if (!c.status) c.status = c.done ? 'done' : 'scheduled'; });
+      state = data;
+      save();
+      propertyNameEl.value = state.propertyName || 'Esrah Garden Home Villa';
+      renderAll();
+    } catch(e) {
+      console.warn('Impossibile leggere i dati dal server, resto sulla copia locale.', e);
+    }
   }
   function uid(){ return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function fmtDate(iso){
@@ -905,6 +946,7 @@
   propertyNameEl.addEventListener('change', () => {
     state.propertyName = propertyNameEl.value.trim() || 'Esrah Garden Home Villa';
     save();
+    postToBackend('saveConfig', { config: { propertyName: state.propertyName } });
   });
 
   // ---------- USD banner + rates ----------
@@ -921,6 +963,7 @@
     if (thb > 0) state.rates.THB = thb;
     state.ratesManualOverride = true;
     save();
+    postToBackend('saveConfig', { config: { rates: state.rates, ratesManualOverride: state.ratesManualOverride } });
     ratesPanel.classList.remove('open');
     renderAll();
   });
@@ -930,6 +973,7 @@
     state.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
     state.ratesManualOverride = false;
     save();
+    postToBackend('saveConfig', { config: { rates: state.rates, ratesFetchedAt: state.ratesFetchedAt, ratesManualOverride: false } });
     document.getElementById('rateEUR').value = state.rates.EUR;
     document.getElementById('rateTHB').value = state.rates.THB;
     renderAll();
@@ -1121,19 +1165,19 @@
       state.bookings.forEach(b => {
         if (iso === b.checkin) {
           const bar = document.createElement('div');
-          bar.className = 'cal-bar';
+          bar.className = 'cal-bar' + (b.syncSource ? ' cal-bar-clean-extra' : '');
           bar.style.background = SOURCE_COLORS[b.source];
-          bar.textContent = '→ ' + b.guest;
-          bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ') — clicca per modificare';
+          bar.textContent = (b.syncSource ? '🔒 ' : '→ ') + b.guest;
+          bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ')' + (b.syncSource ? ' — sincronizzato, sola consultazione' : ' — clicca per modificare');
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         } else if (iso > b.checkin && iso < b.checkout) {
           const bar = document.createElement('div');
-          bar.className = 'cal-bar';
+          bar.className = 'cal-bar' + (b.syncSource ? ' cal-bar-clean-extra' : '');
           bar.style.background = SOURCE_COLORS[b.source];
           bar.style.opacity = '0.55';
-          bar.textContent = b.guest;
-          bar.title = b.guest + ' — clicca per modificare';
+          bar.textContent = (b.syncSource ? '🔒 ' : '') + b.guest;
+          bar.title = b.guest + (b.syncSource ? ' — sincronizzato, sola consultazione' : ' — clicca per modificare');
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         }
@@ -1224,10 +1268,10 @@
         const [type, id] = elm.getAttribute('data-toggle-clean').split(':');
         if (type === 'booking') {
           const b = state.bookings.find(x => x.id === id);
-          if (b) { b.cleaningStatus = nextCleanStatus(b.cleaningStatus || 'scheduled'); save(); renderAll(); }
+          if (b) { b.cleaningStatus = nextCleanStatus(b.cleaningStatus || 'scheduled'); save(); renderAll(); postToBackend('saveBooking', { booking: b }); }
         } else {
           const c = state.cleanings.find(x => x.id === id);
-          if (c) { c.status = nextCleanStatus(c.status || 'scheduled'); save(); renderAll(); }
+          if (c) { c.status = nextCleanStatus(c.status || 'scheduled'); save(); renderAll(); postToBackend('saveCleaning', { cleaning: c }); }
         }
       });
     });
@@ -1266,12 +1310,12 @@
         <div class="b-left">
           <span class="src-tag" style="background:${SOURCE_COLORS[b.source]}">${SOURCE_LABELS[b.source]}</span>
           <div class="b-info">
-            <div class="b-guest">${escapeHtml(b.guest)}</div>
+            <div class="b-guest">${b.syncSource ? '🔒 ' : ''}${escapeHtml(b.guest)}</div>
             <div class="b-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} notti${priceStr}</div>
           </div>
         </div>
         <div class="b-actions">
-          <button class="btn-small" data-edit="${b.id}">Modifica</button>
+          <button class="btn-small" data-edit="${b.id}">${b.syncSource ? 'Vedi' : 'Modifica'}</button>
         </div>
       </div>`;
     }).join('');
@@ -1364,9 +1408,20 @@
     form.reset();
     cleaningDateEl.dataset.auto = 'true';
     warnBox.classList.remove('show');
+    form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => { el.disabled = false; });
     document.getElementById('deleteBtn').style.display = id ? 'inline-block' : 'none';
     if (id) {
       const b = state.bookings.find(x => x.id === id);
+      // Le prenotazioni importate automaticamente da Airbnb/Booking.com (blocco date)
+      // si possono solo consultare qui: vanno modificate sulla piattaforma originale,
+      // altrimenti si perderebbe la sincronizzazione al giro successivo.
+      const readOnly = !!(b && b.syncSource);
+      form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => { el.disabled = readOnly; });
+      document.getElementById('deleteBtn').style.display = (id && !readOnly) ? 'inline-block' : 'none';
+      if (readOnly) {
+        warnBox.textContent = 'Prenotazione sincronizzata automaticamente da ' + (b.syncSource === 'airbnb-ics' ? 'Airbnb' : 'Booking.com') + ': per modificarla usa quella piattaforma, qui è solo in consultazione.';
+        warnBox.classList.add('show');
+      }
       document.getElementById('modalTitle').textContent = 'Modifica prenotazione';
       document.getElementById('bookingId').value = b.id;
       document.getElementById('guest').value = b.guest;
@@ -1410,6 +1465,7 @@
     if (id && confirm('Eliminare questa prenotazione?')) {
       state.bookings = state.bookings.filter(b => b.id !== id);
       save();
+      postToBackend('deleteBooking', { id });
       renderAll();
       closeModal();
     }
@@ -1418,6 +1474,8 @@
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const id = document.getElementById('bookingId').value || uid();
+    const existingForSync = state.bookings.find(b => b.id === id);
+    if (existingForSync && existingForSync.syncSource) return; // sicurezza extra: mai modificare un blocco sincronizzato da qui
     const checkin = checkinEl.value;
     const checkout = checkoutEl.value;
     if (checkout <= checkin) {
@@ -1450,6 +1508,7 @@
     if (existingIdx >= 0) state.bookings[existingIdx] = booking;
     else state.bookings.push(booking);
     save();
+    postToBackend('saveBooking', { booking });
     renderAll();
     closeModal();
   });
@@ -1493,6 +1552,7 @@
     if (id && confirm('Eliminare questa pulizia extra?')) {
       state.cleanings = state.cleanings.filter(c => c.id !== id);
       save();
+      postToBackend('deleteCleaning', { id });
       renderAll();
       closeCleaningModal();
     }
@@ -1514,6 +1574,7 @@
     if (existingIdx >= 0) state.cleanings[existingIdx] = cleaning;
     else state.cleanings.push(cleaning);
     save();
+    postToBackend('saveCleaning', { cleaning });
     renderAll();
     closeCleaningModal();
   });
@@ -1561,7 +1622,12 @@
           save();
           propertyNameEl.value = state.propertyName || 'Esrah Garden Home Villa';
           renderAll();
-          alert('Backup importato correttamente.');
+          if (backendEnabled()) {
+            postToBackend('bulkReplace', { state });
+            alert('Backup importato correttamente e inviato al server condiviso.');
+          } else {
+            alert('Backup importato correttamente.');
+          }
         } else {
           alert('File non valido.');
         }
@@ -1574,6 +1640,13 @@
   });
 
   renderAll();
+  // Se il backend condiviso è configurato: carica subito i dati più recenti (utili anche
+  // dagli altri dispositivi/dalla sync Airbnb/Booking) e poi ricontrolla ogni 5 minuti
+  // mentre la pagina resta aperta.
+  if (backendEnabled()) {
+    refreshFromBackend();
+    setInterval(refreshFromBackend, 5 * 60 * 1000);
+  }
 })();
 </script>
 </body>
