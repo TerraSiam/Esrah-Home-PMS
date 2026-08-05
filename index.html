@@ -501,7 +501,6 @@
           <span><span class="dot" style="background:var(--clean)"></span>▨ Pulizia pianificata</span>
           <span><span class="dot" style="background:var(--clean-done)"></span>▨ Pulizia fatta</span>
           <span><span class="dot" style="background:var(--clean);border:1.5px dashed rgba(28,25,23,.55)"></span>✦ Pulizia extra</span>
-          <span>🔒 Sincronizzato da Airbnb/Booking (sola consultazione)</span>
         </div>
       </div>
 
@@ -524,7 +523,10 @@
 
     <div>
       <div class="card" id="cleaningSection">
-        <h2>Prossime pulizie</h2>
+        <div class="card-header-row">
+          <h2>Prossime pulizie</h2>
+          <button class="btn-small" type="button" id="cleaningUndoBtn" style="display:none;">↩ Annulla ultima azione</button>
+        </div>
         <p class="hint">Pulizie generate dai check-out e pulizie extra, con costo se inserito.</p>
         <div id="cleaningList"></div>
       </div>
@@ -1177,19 +1179,19 @@
       state.bookings.forEach(b => {
         if (iso === b.checkin) {
           const bar = document.createElement('div');
-          bar.className = 'cal-bar' + (b.syncSource ? ' cal-bar-clean-extra' : '');
+          bar.className = 'cal-bar';
           bar.style.background = SOURCE_COLORS[b.source];
-          bar.textContent = (b.syncSource ? '🔒 ' : '→ ') + b.guest;
-          bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ')' + (b.syncSource ? ' — sincronizzato, sola consultazione' : ' — clicca per modificare');
+          bar.textContent = '→ ' + b.guest;
+          bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ')' + ' — clicca per modificare';
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         } else if (iso > b.checkin && iso < b.checkout) {
           const bar = document.createElement('div');
-          bar.className = 'cal-bar' + (b.syncSource ? ' cal-bar-clean-extra' : '');
+          bar.className = 'cal-bar';
           bar.style.background = SOURCE_COLORS[b.source];
           bar.style.opacity = '0.55';
-          bar.textContent = (b.syncSource ? '🔒 ' : '') + b.guest;
-          bar.title = b.guest + (b.syncSource ? ' — sincronizzato, sola consultazione' : ' — clicca per modificare');
+          bar.textContent = b.guest;
+          bar.title = b.guest + ' — clicca per modificare';
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         }
@@ -1242,6 +1244,20 @@
   }
 
   // ---------- cleaning list ----------
+  let lastCleaningUndo = null; // { type: 'booking'|'extra', id, prevStatus } — un solo passo indietro
+  document.getElementById('cleaningUndoBtn').addEventListener('click', () => {
+    if (!lastCleaningUndo) return;
+    const { type, id, prevStatus } = lastCleaningUndo;
+    if (type === 'booking') {
+      const b = state.bookings.find(x => x.id === id);
+      if (b) { b.cleaningStatus = prevStatus; save(); postToBackend('saveBooking', { booking: b }); }
+    } else {
+      const c = state.cleanings.find(x => x.id === id);
+      if (c) { c.status = prevStatus; save(); postToBackend('saveCleaning', { cleaning: c }); }
+    }
+    lastCleaningUndo = null;
+    renderAll();
+  });
   function renderCleaningList(){
     const today = todayISO();
     // Solo pulizie da oggi in poi e non ancora completate: una volta segnata "fatta"
@@ -1282,16 +1298,28 @@
         const [type, id] = elm.getAttribute('data-toggle-clean').split(':');
         if (type === 'booking') {
           const b = state.bookings.find(x => x.id === id);
-          if (b) { b.cleaningStatus = nextCleanStatus(b.cleaningStatus || 'scheduled'); save(); renderAll(); postToBackend('saveBooking', { booking: b }); }
+          if (b) {
+            const prevStatus = b.cleaningStatus || 'scheduled';
+            b.cleaningStatus = nextCleanStatus(prevStatus);
+            lastCleaningUndo = { type: 'booking', id, prevStatus };
+            save(); renderAll(); postToBackend('saveBooking', { booking: b });
+          }
         } else {
           const c = state.cleanings.find(x => x.id === id);
-          if (c) { c.status = nextCleanStatus(c.status || 'scheduled'); save(); renderAll(); postToBackend('saveCleaning', { cleaning: c }); }
+          if (c) {
+            const prevStatus = c.status || 'scheduled';
+            c.status = nextCleanStatus(prevStatus);
+            lastCleaningUndo = { type: 'extra', id, prevStatus };
+            save(); renderAll(); postToBackend('saveCleaning', { cleaning: c });
+          }
         }
       });
     });
     el.querySelectorAll('[data-edit-clean]').forEach(elm => {
       elm.addEventListener('click', () => openCleaningModal(elm.getAttribute('data-edit-clean')));
     });
+    const undoBtn = document.getElementById('cleaningUndoBtn');
+    if (undoBtn) undoBtn.style.display = lastCleaningUndo ? 'inline-block' : 'none';
   }
 
   // ---------- booking list ----------
@@ -1324,12 +1352,12 @@
         <div class="b-left">
           <span class="src-tag" style="background:${SOURCE_COLORS[b.source]}">${SOURCE_LABELS[b.source]}</span>
           <div class="b-info">
-            <div class="b-guest">${b.syncSource ? '🔒 ' : ''}${escapeHtml(b.guest)}</div>
+            <div class="b-guest">${escapeHtml(b.guest)}</div>
             <div class="b-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} notti${priceStr}</div>
           </div>
         </div>
         <div class="b-actions">
-          <button class="btn-small" data-edit="${b.id}">${b.syncSource ? 'Vedi' : 'Modifica'}</button>
+          <button class="btn-small" data-edit="${b.id}">Modifica</button>
         </div>
       </div>`;
     }).join('');
@@ -1422,20 +1450,9 @@
     form.reset();
     cleaningDateEl.dataset.auto = 'true';
     warnBox.classList.remove('show');
-    form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => { el.disabled = false; });
     document.getElementById('deleteBtn').style.display = id ? 'inline-block' : 'none';
     if (id) {
       const b = state.bookings.find(x => x.id === id);
-      // Le prenotazioni importate automaticamente da Airbnb/Booking.com (blocco date)
-      // si possono solo consultare qui: vanno modificate sulla piattaforma originale,
-      // altrimenti si perderebbe la sincronizzazione al giro successivo.
-      const readOnly = !!(b && b.syncSource);
-      form.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(el => { el.disabled = readOnly; });
-      document.getElementById('deleteBtn').style.display = (id && !readOnly) ? 'inline-block' : 'none';
-      if (readOnly) {
-        warnBox.textContent = 'Prenotazione sincronizzata automaticamente da ' + (b.syncSource === 'airbnb-ics' ? 'Airbnb' : 'Booking.com') + ': per modificarla usa quella piattaforma, qui è solo in consultazione.';
-        warnBox.classList.add('show');
-      }
       document.getElementById('modalTitle').textContent = 'Modifica prenotazione';
       document.getElementById('bookingId').value = b.id;
       document.getElementById('guest').value = b.guest;
@@ -1489,7 +1506,6 @@
     e.preventDefault();
     const id = document.getElementById('bookingId').value || uid();
     const existingForSync = state.bookings.find(b => b.id === id);
-    if (existingForSync && existingForSync.syncSource) return; // sicurezza extra: mai modificare un blocco sincronizzato da qui
     const checkin = checkinEl.value;
     const checkout = checkoutEl.value;
     if (checkout <= checkin) {
@@ -1518,6 +1534,7 @@
       cleaningCost: document.getElementById('cleaningCost').value ? Number(document.getElementById('cleaningCost').value) : null,
       cleaningCostCurrency: document.getElementById('cleaningCostCurrency').value,
       cleaningStatus: document.getElementById('cleaningStatus').value,
+      syncSource: existingForSync ? (existingForSync.syncSource || '') : '',
     };
     if (existingIdx >= 0) state.bookings[existingIdx] = booking;
     else state.bookings.push(booking);
