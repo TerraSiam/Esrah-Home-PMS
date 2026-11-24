@@ -418,7 +418,9 @@
   .rates-panel .rate-note { line-height: 1.45; }
   @media (min-width: 1100px) {
     /* i sette riquadri su una riga sola, senza quello rimasto solo a capo */
-    .stats { grid-template-columns: repeat(7, 1fr); }
+    .stats { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .stats .stat-label { font-size: 10px; letter-spacing: .03em; }
+    .stats .stat-card { padding: 14px 12px; }
   }
   @media (max-width: 560px) {
     /* bersagli comodi per il dito: almeno 44 px */
@@ -450,6 +452,39 @@
     .modal-actions button { flex: 1 1 0; min-height: 46px; font-size: 15px; }
     .modal-actions .btn-danger { flex: 0 0 auto; }
     .footer-note { line-height: 1.5; padding: 0 8px; }
+  }
+
+  /* ---------- Calendario più leggibile (novembre 2026) ---------- */
+  .cal-grid { --cal-step: 16px; grid-template-columns: repeat(7, minmax(0, 1fr)); } /* --cal-step: bordi + margini interni + distanza fra due caselle */
+  .layout > div { min-width: 0; }
+  .cal-day { min-width: 0; min-height: 84px; display: flex; flex-direction: column; align-items: stretch; }
+  .cal-day .num { order: 0; align-self: flex-start; line-height: 20px; }
+  .cal-day.weekend { background: #F8F5EE; }
+  .cal-day.past .num { color: var(--muted); font-weight: 600; }
+  .cal-day.today .num { background: var(--brand); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; padding: 0 6px; text-align: center; }
+  .cal-day.today { box-shadow: 0 0 0 1px var(--brand); }
+  .cal-bar { order: 2; font-size: 11px; line-height: 16px; padding: 1px 6px; flex: 0 0 auto; }
+  /* Il soggiorno è una barra continua per ogni riga della settimana, con il nome scritto per intero:
+     la barra "di testa" si allunga sopra i giorni seguenti, che restano al loro posto ma nascosti. */
+  .cal-bar-stay { order: 1; }
+  .cal-bar-head { position: relative; z-index: 2; align-self: flex-start; width: calc(var(--span, 1) * 100% + (var(--span, 1) - 1) * var(--cal-step)); max-width: none; }
+  .cal-bar-head.cal-bar-cont { opacity: .72 !important; }
+  .cal-bar-covered { visibility: hidden; }
+  .cal-nav { gap: 8px; }
+  .cal-nav-center { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .cal-nav .month-label { font-size: 16px; }
+  .legend { row-gap: 6px; }
+  @media (max-width: 560px) {
+    .cal-grid { --cal-step: 13px; }
+    .cal-day { min-height: 64px; }
+    .cal-bar { font-size: 10px; line-height: 15px; padding: 1px 4px; }
+    .cal-nav .month-label { font-size: 15px; }
+    .cal-nav-center { gap: 6px; }
+    /* nelle caselle strette l'ora della pulizia si legge per intero: la parola resta solo al computer */
+    .cal-bar-clean { padding: 1px 1px; font-size: 9px; letter-spacing: -.03em; text-overflow: clip; text-align: center; }
+    .cal-bar-clean .cal-bar-word { display: none; }
+    /* il suggerimento resta nascosto, ma compare mentre stai scegliendo le date */
+    .cal-hint.selecting { display: block; }
   }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
@@ -546,7 +581,10 @@
       <div class="card">
         <div class="cal-nav">
           <button class="btn-small" id="prevMonth">‹ Prec</button>
-          <div class="month-label" id="monthLabel"></div>
+          <div class="cal-nav-center">
+            <div class="month-label" id="monthLabel"></div>
+            <button class="btn-small" type="button" id="todayBtn" title="Torna al mese di oggi">Oggi</button>
+          </div>
           <button class="btn-small" id="nextMonth">Succ ›</button>
         </div>
         <div class="cal-hint" id="calHint">Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.</div>
@@ -1211,6 +1249,7 @@
     }
     const today = todayISO();
 
+    document.getElementById('calHint').classList.toggle('selecting', !!selection.start);
     if (selection.start) {
       document.getElementById('calHint').textContent =
         'Data di arrivo selezionata: ' + fmtDate(selection.start) + '. Ora clicca sulla data di partenza (o clicca di nuovo per annullare).';
@@ -1222,7 +1261,22 @@
     for (let d=1; d<=daysInMonth; d++){
       const iso = isoFromYMD(y,m,d);
       const cell = document.createElement('div');
-      cell.className = 'cal-day' + (iso === today ? ' today' : '') + (iso === selection.start ? ' selected-start' : '');
+      const dowIndex = (firstDow + d - 1) % 7; // 0 = lunedì
+      cell.className = 'cal-day' + (iso === today ? ' today' : '') + (iso === selection.start ? ' selected-start' : '')
+        + (iso < today ? ' past' : '') + (dowIndex >= 5 ? ' weekend' : '');
+      // Solo aspetto: la prima barra di un soggiorno in ogni riga si allunga fino a fine riga
+      // (o fine soggiorno/mese) e porta il nome; le barre dei giorni coperti restano ma non si vedono.
+      const styleStayBar = (bar, b, isStart) => {
+        bar.classList.add('cal-bar-stay');
+        if (isStart || dowIndex === 0 || d === 1) {
+          const span = Math.max(1, Math.min(7 - dowIndex, nightsBetween(iso, b.checkout), daysInMonth - d + 1));
+          bar.classList.add('cal-bar-head');
+          if (!isStart) bar.classList.add('cal-bar-cont');
+          bar.style.setProperty('--span', span);
+        } else {
+          bar.classList.add('cal-bar-covered');
+        }
+      };
       const num = document.createElement('div');
       num.className = 'num';
       num.textContent = d;
@@ -1267,6 +1321,7 @@
           bar.style.background = SOURCE_COLORS[b.source];
           bar.textContent = '→ ' + b.guest;
           bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ')' + ' — clicca per modificare';
+          styleStayBar(bar, b, true);
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         } else if (iso > b.checkin && iso < b.checkout) {
@@ -1276,6 +1331,7 @@
           bar.style.opacity = '0.55';
           bar.textContent = b.guest;
           bar.title = b.guest + ' — clicca per modificare';
+          styleStayBar(bar, b, false);
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
         }
@@ -1285,7 +1341,8 @@
           bar.className = 'cal-bar cal-bar-clean';
           bar.style.background = meta.color;
           bar.style.color = meta.text;
-          bar.textContent = '▨ ' + (b.cleaningTime || '') + ' pulizia';
+          bar.textContent = '▨ ' + (b.cleaningTime || '');
+          bar.appendChild(Object.assign(document.createElement('span'), { className: 'cal-bar-word', textContent: ' pulizia' }));
           bar.title = 'Pulizia ' + b.guest + ' — ' + (b.cleaningTime || '') + ' (' + meta.shortLabel + ') — clicca per modificare';
           bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
           cell.appendChild(bar);
@@ -1298,7 +1355,8 @@
           bar.className = 'cal-bar cal-bar-clean cal-bar-clean-extra';
           bar.style.background = meta.color;
           bar.style.color = meta.text;
-          bar.textContent = '✦ ' + (c.time || '') + ' extra';
+          bar.textContent = '✦ ' + (c.time || '');
+          bar.appendChild(Object.assign(document.createElement('span'), { className: 'cal-bar-word', textContent: ' extra' }));
           bar.title = 'Pulizia extra — ' + (c.time || '') + ' (' + meta.shortLabel + ')' + (c.cost ? ' — ' + c.cost + ' ' + c.currency : '') + ' — clicca per modificare';
           bar.addEventListener('click', (e) => { e.stopPropagation(); openCleaningModal(c.id); });
           cell.appendChild(bar);
@@ -1490,6 +1548,13 @@
   });
   document.getElementById('nextMonth').addEventListener('click', () => {
     viewDate.setMonth(viewDate.getMonth()+1);
+    syncPeriodToViewMonth();
+    renderAll();
+  });
+  // Scorciatoia in più: torna al mese corrente (stesso effetto di scorrere con Prec/Succ).
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    const now = new Date();
+    viewDate.setFullYear(now.getFullYear(), now.getMonth(), 1);
     syncPeriodToViewMonth();
     renderAll();
   });
