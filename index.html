@@ -406,6 +406,51 @@
        16px: qui sopra a 16px per evitare lo "spostamento"/zoom improvviso al tocco. */
     .field input, .field select, .field textarea { font-size: 16px; }
   }
+
+  /* ---------- Ritocchi d'uso (novembre 2026): solo aspetto, nessuna funzione cambiata ---------- */
+  .stat-value, .usd-banner .value, .usd-banner .value-thb, .b-dates, .cal-day .num { font-variant-numeric: tabular-nums; }
+  button:focus-visible, .clean-badge:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .b-left { flex: 1 1 auto; }
+  .b-dates { line-height: 1.4; }
+  .clean-badge { display: inline-flex; align-items: center; user-select: none; -webkit-user-select: none; transition: filter .12s ease; }
+  .clean-badge:hover { filter: brightness(.96); }
+  .nights-hint { font-size: 12px; font-weight: 700; color: var(--brand-dark); margin: -6px 0 12px; min-height: 16px; }
+  .rates-panel .rate-note { line-height: 1.45; }
+  @media (min-width: 1100px) {
+    /* i sette riquadri su una riga sola, senza quello rimasto solo a capo */
+    .stats { grid-template-columns: repeat(7, 1fr); }
+  }
+  @media (max-width: 560px) {
+    /* bersagli comodi per il dito: almeno 44 px */
+    button { min-height: 44px; font-size: 14px; }
+    .btn-small { min-height: 40px; padding: 8px 14px; font-size: 13px; }
+    .header-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .header-actions button { font-size: 13px; padding: 8px 6px; }
+    .header-actions #addBtn { grid-column: 1 / -1; min-height: 48px; font-size: 15px; }
+    .toolbar-row { margin-bottom: 12px; }
+    /* i tre incassi in un unico riquadro compatto, nello stesso ordine */
+    .usd-banner-row { gap: 0; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); background: linear-gradient(135deg, var(--brand-dark), #1C1917); }
+    .usd-banner { background: none; border-radius: 0; box-shadow: none; padding: 11px 14px; }
+    .usd-banner + .usd-banner { border-top: 1px solid rgba(255,255,255,.14); }
+    .usd-banner .label { font-size: 10px; }
+    .stats .stat-card:last-child:nth-child(odd), .period-results .stat-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .stat-label { font-size: 10px; }
+    /* elenchi: etichetta sopra il nome, azione sempre a destra sulla stessa riga */
+    .booking-item { flex-wrap: nowrap; align-items: center; padding: 10px 12px; }
+    .booking-item .b-left { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .b-guest { font-size: 14px; }
+    .clean-badge { min-height: 40px; padding: 8px 14px; font-size: 12px; }
+    .b-actions { flex-direction: column; align-items: stretch; }
+    .card-header-row { flex-wrap: wrap; }
+    .field input, .field select { min-height: 44px; }
+    .field label { font-size: 12px; }
+    /* modulo: «Salva» sempre a portata di pollice, senza dover scorrere fino in fondo */
+    .modal { max-height: 92vh; max-height: 92dvh; }
+    .modal-actions { position: sticky; bottom: -16px; margin: 16px -16px -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 1px solid var(--border); }
+    .modal-actions button { flex: 1 1 0; min-height: 46px; font-size: 15px; }
+    .modal-actions .btn-danger { flex: 0 0 auto; }
+    .footer-note { line-height: 1.5; padding: 0 8px; }
+  }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
   .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
@@ -578,7 +623,7 @@
       <input type="hidden" id="bookingId" />
       <div class="field">
         <label>Nome ospite</label>
-        <input type="text" id="guest" required placeholder="es. Mario Rossi" />
+        <input type="text" id="guest" required placeholder="es. Mario Rossi" autocomplete="off" autocapitalize="words" autocorrect="off" enterkeyhint="next" />
       </div>
       <div class="field-row">
         <div class="field">
@@ -592,7 +637,7 @@
         </div>
         <div class="field">
           <label>N. ospiti</label>
-          <input type="number" id="guestsCount" min="1" value="2" />
+          <input type="number" id="guestsCount" min="1" value="2" inputmode="numeric" />
         </div>
       </div>
       <div class="field-row">
@@ -605,10 +650,11 @@
           <input type="date" id="checkout" required />
         </div>
       </div>
+      <div class="nights-hint" id="nightsHint"></div>
       <div class="field-row">
         <div class="field">
           <label>Prezzo totale (opzionale)</label>
-          <input type="number" id="price" min="0" step="0.01" placeholder="es. 320" />
+          <input type="number" id="price" min="0" step="0.01" placeholder="es. 320" inputmode="decimal" />
         </div>
         <div class="field narrow">
           <label>Valuta</label>
@@ -638,7 +684,7 @@
       <div class="field-row">
         <div class="field">
           <label>Costo pulizia (opzionale)</label>
-          <input type="number" id="cleaningCost" min="0" step="0.01" placeholder="es. 15" />
+          <input type="number" id="cleaningCost" min="0" step="0.01" placeholder="es. 15" inputmode="decimal" />
         </div>
         <div class="field narrow">
           <label>Valuta</label>
@@ -686,7 +732,7 @@
       <div class="field-row">
         <div class="field">
           <label>Costo (opzionale)</label>
-          <input type="number" id="extraCleaningCost" min="0" step="0.01" placeholder="es. 15" />
+          <input type="number" id="extraCleaningCost" min="0" step="0.01" placeholder="es. 15" inputmode="decimal" />
         </div>
         <div class="field narrow">
           <label>Valuta</label>
@@ -1483,6 +1529,28 @@
     }
   });
   cleaningDateEl.addEventListener('input', () => { cleaningDateEl.dataset.auto = 'false'; });
+  // Aiuti di compilazione: numero di notti sempre visibile; se sposti il check-in oltre il
+  // check-out, il check-out si porta al giorno dopo (e la pulizia lo segue come sempre).
+  const nightsHintEl = document.getElementById('nightsHint');
+  function updateNightsHint(){
+    const ci = checkinEl.value, co = checkoutEl.value;
+    const n = (ci && co) ? nightsBetween(ci, co) : 0;
+    nightsHintEl.textContent = n > 0 ? (n + (n === 1 ? ' notte' : ' notti')) : '';
+  }
+  checkinEl.addEventListener('change', () => {
+    if (checkinEl.value && checkoutEl.value && checkoutEl.value <= checkinEl.value) {
+      checkoutEl.value = addDays(checkinEl.value, 1);
+      checkoutEl.dispatchEvent(new Event('change'));
+    }
+    updateNightsHint();
+  });
+  checkoutEl.addEventListener('change', updateNightsHint);
+  const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
+    else if (overlay.classList.contains('open')) closeModal();
+  });
 
   function openModal(id, prefill){
     form.reset();
@@ -1522,6 +1590,10 @@
     }
     overlay.classList.add('open');
     lockBodyScroll();
+    updateNightsHint();
+    overlay.querySelector('.modal').scrollTop = 0;
+    // al computer il cursore parte già nel nome dell'ospite (sul telefono no: aprirebbe la tastiera)
+    if (!id && finePointer) document.getElementById('guest').focus();
   }
   function closeModal(){ overlay.classList.remove('open'); unlockBodyScroll(); }
 
@@ -1549,6 +1621,7 @@
     if (checkout <= checkin) {
       warnBox.textContent = 'La data di check-out deve essere successiva al check-in.';
       warnBox.classList.add('show');
+      overlay.querySelector('.modal').scrollTop = 0; // l'avviso è in cima al modulo: portalo in vista
       return;
     }
     const candidate = { id, checkin, checkout };
@@ -1556,6 +1629,7 @@
     if (conflict) {
       warnBox.textContent = `Attenzione: sovrapposizione con la prenotazione di ${conflict.guest} (${fmtDate(conflict.checkin)} → ${fmtDate(conflict.checkout)}, ${SOURCE_LABELS[conflict.source]}). Controlla per evitare un doppio booking.`;
       warnBox.classList.add('show');
+      overlay.querySelector('.modal').scrollTop = 0; // l'avviso è in cima al modulo: portalo in vista
       return;
     }
     const existingIdx = state.bookings.findIndex(b => b.id === id);
