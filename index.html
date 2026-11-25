@@ -486,6 +486,33 @@
     /* il suggerimento resta nascosto, ma compare mentre stai scegliendo le date */
     .cal-hint.selecting { display: block; }
   }
+  /* ---------- Giro 2 (novembre 2026): filtri, elenchi che scorrono, pulizia extra dal giorno ---------- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted); background: #FCFBF8; }
+  .chip.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .chip.on:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .filter-search { margin-bottom: 10px; }
+  .filter-search input { width: 100%; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; color: var(--text); background: #fff; -webkit-appearance: none; appearance: none; }
+  .filter-search input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
+  .list-count { font-size: 12px; color: var(--muted); font-weight: 600; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+  .net-note { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .cal-pick { display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--brand-light); color: var(--brand-dark); font-size: 12px; font-weight: 600; }
+  .cal-pick.open { display: flex; }
+  .cal-pick button { background: #fff; border-color: var(--brand); color: var(--brand-dark); }
+  .cal-grid { touch-action: pan-y; }
+  @media (max-width: 560px) {
+    /* gli elenchi lunghi scorrono dentro il loro riquadro, così la pagina resta corta */
+    .scroll-box { overflow-y: auto; -webkit-overflow-scrolling: touch; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px 2px 0; margin: 0 -2px; }
+    #bookingList.scroll-box { max-height: 58vh; max-height: 58dvh; }
+    #cleaningList.scroll-box { max-height: 46vh; max-height: 46dvh; }
+    .scroll-box.no-scroll { border: none; padding: 0; margin: 0; }
+    .chip { min-height: 36px; padding: 6px 12px; font-size: 13px; flex: 0 0 auto; white-space: nowrap; }
+    /* una riga sola per gruppo: se non ci sta, scorre di lato */
+    .chip-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .filter-search input { font-size: 16px; min-height: 44px; }
+    .cal-pick button { flex: 1 1 100%; }
+  }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
   .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
@@ -589,6 +616,10 @@
         </div>
         <div class="cal-hint" id="calHint">Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.</div>
         <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-pick" id="calPick">
+          <span id="calPickText"></span>
+          <button class="btn-small" type="button" id="calPickCleaning">✦ Pulizia extra in questo giorno</button>
+        </div>
         <div class="legend">
           <span><span class="dot" style="background:var(--airbnb)"></span>Airbnb</span>
           <span><span class="dot" style="background:var(--booking)"></span>Booking</span>
@@ -625,7 +656,7 @@
           <button class="btn-small" type="button" id="cleaningUndoBtn" style="display:none;">↩ Annulla ultima azione</button>
         </div>
         <p class="hint">Pulizie generate dai check-out e pulizie extra, con costo se inserito.</p>
-        <div id="cleaningList"></div>
+        <div id="cleaningList" class="scroll-box"></div>
       </div>
       <div class="card" id="bookingsSection">
         <div class="card-header-row">
@@ -644,7 +675,23 @@
             </div>
             <button class="btn-small" type="button" id="bookingsFilterReset">Mostra tutte</button>
           </div>
-          <div id="bookingList"></div>
+          <div class="chip-row" id="bookingsPeriodChips" aria-label="Periodi rapidi">
+            <button class="chip" type="button" data-period="future">Future</button>
+            <button class="chip" type="button" data-period="month">Questo mese</button>
+            <button class="chip" type="button" data-period="year">Quest'anno</button>
+            <button class="chip" type="button" data-period="past">Passate</button>
+          </div>
+          <div class="chip-row" id="bookingsSourceChips" aria-label="Canale">
+            <button class="chip" type="button" data-source="airbnb">Airbnb</button>
+            <button class="chip" type="button" data-source="booking">Booking</button>
+            <button class="chip" type="button" data-source="diretta">Diretta</button>
+            <button class="chip" type="button" data-source="altro">Altro</button>
+          </div>
+          <div class="filter-search">
+            <input type="search" id="bookingsSearch" placeholder="Cerca per nome o nota…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Cerca nelle prenotazioni" />
+          </div>
+          <div class="list-count" id="bookingsCount"></div>
+          <div id="bookingList" class="scroll-box"></div>
         </div>
       </div>
     </div>
@@ -1258,6 +1305,11 @@
         'Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.';
     }
 
+    // Con un giorno scelto compare, sotto il calendario, la scorciatoia per la pulizia extra
+    // di quel giorno (il secondo clic su un'altra data crea la prenotazione, come sempre).
+    document.getElementById('calPick').classList.toggle('open', !!selection.start);
+    if (selection.start) document.getElementById('calPickText').textContent = 'Giorno scelto: ' + fmtDate(selection.start);
+
     for (let d=1; d<=daysInMonth; d++){
       const iso = isoFromYMD(y,m,d);
       const cell = document.createElement('div');
@@ -1385,6 +1437,14 @@
     openModal(null, { checkin: start, checkout });
   }
 
+  document.getElementById('calPickCleaning').addEventListener('click', () => {
+    const day = selection.start;
+    if (!day) return;
+    selection.start = null;
+    renderCalendar();
+    openCleaningModal(null, day);
+  });
+
   // ---------- cleaning list ----------
   let lastCleaningUndo = null; // { type: 'booking'|'extra', id, prevStatus } — un solo passo indietro
   document.getElementById('cleaningUndoBtn').addEventListener('click', () => {
@@ -1409,6 +1469,7 @@
       .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))
       .slice(0, 10);
     const el = document.getElementById('cleaningList');
+    el.classList.toggle('no-scroll', upcoming.length <= 3);
     if (!upcoming.length) {
       el.innerHTML = '<div class="empty-state">Nessuna pulizia in programma</div>';
       return;
@@ -1467,21 +1528,60 @@
   // ---------- booking list ----------
   const bookingsFilterFromEl = document.getElementById('bookingsFilterFrom');
   const bookingsFilterToEl = document.getElementById('bookingsFilterTo');
+  const bookingsSearchEl = document.getElementById('bookingsSearch');
+  const bookingsSourceFilter = { airbnb: false, booking: false, diretta: false, altro: false };
+  // confronto senza maiuscole né accenti: «jose» trova «José»
+  function normText(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+  function bookingPeriodPreset(name){
+    const today = todayISO();
+    const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7)) - 1;
+    if (name === 'future') return [today, ''];
+    if (name === 'month') return [isoFromYMD(y, m, 1), isoFromYMD(y, m + 1, 0)];
+    if (name === 'year') return [isoFromYMD(y, 0, 1), isoFromYMD(y, 11, 31)];
+    return ['', addDays(today, -1)]; // passate
+  }
+  function updateBookingFilterChips(){
+    document.querySelectorAll('#bookingsPeriodChips .chip').forEach(ch => {
+      const r = bookingPeriodPreset(ch.getAttribute('data-period'));
+      ch.classList.toggle('on', bookingsFilterFromEl.value === r[0] && bookingsFilterToEl.value === r[1]);
+    });
+    document.querySelectorAll('#bookingsSourceChips .chip').forEach(ch => {
+      ch.classList.toggle('on', !!bookingsSourceFilter[ch.getAttribute('data-source')]);
+    });
+  }
   function renderBookingList(){
     let sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
     const filterFrom = bookingsFilterFromEl.value;
     const filterTo = bookingsFilterToEl.value;
-    const filterActive = filterFrom && filterTo && filterTo >= filterFrom;
+    // Periodo: con due date vale l'intervallo (come sempre); con una sola, «da quella data
+    // in poi» oppure «fino a quella data».
+    const filterActive = !!(filterFrom || filterTo) && !(filterFrom && filterTo && filterTo < filterFrom);
     if (filterActive) {
-      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom, checkout: addDays(filterTo, 1) }));
+      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom || '0000-01-01', checkout: filterTo ? addDays(filterTo, 1) : '9999-12-31' }));
     }
+    const sourcesOn = Object.keys(bookingsSourceFilter).filter(k => bookingsSourceFilter[k]);
+    if (sourcesOn.length) sorted = sorted.filter(b => bookingsSourceFilter[b.source]);
+    const needle = normText(bookingsSearchEl.value);
+    if (needle) sorted = sorted.filter(b => normText((b.guest || '') + ' ' + (b.notes || '')).indexOf(needle) !== -1);
+    const otherFilters = sourcesOn.length > 0 || !!needle;
+    updateBookingFilterChips();
     const el = document.getElementById('bookingList');
+    const countEl = document.getElementById('bookingsCount');
+    el.classList.toggle('no-scroll', sorted.length <= 4);
     if (!sorted.length) {
-      el.innerHTML = filterActive
+      countEl.textContent = '';
+      el.innerHTML = otherFilters
+        ? '<div class="empty-state">Nessuna prenotazione con questi filtri.</div>'
+        : filterActive
         ? '<div class="empty-state">Nessuna prenotazione in questo periodo.</div>'
         : '<div class="empty-state">Nessuna prenotazione. Aggiungine una con "+ Nuova prenotazione" o cliccando sul calendario.</div>';
       return;
     }
+    const shownNights = sorted.reduce((n, b) => n + nightsBetween(b.checkin, b.checkout), 0);
+    const shownUSD = sorted.reduce((t, b) => t + (b.price ? toUSD(Number(b.price), b.currency) : 0), 0);
+    countEl.textContent = sorted.length + (sorted.length === 1 ? ' prenotazione' : ' prenotazioni')
+      + (sorted.length < state.bookings.length ? ' su ' + state.bookings.length : '')
+      + ' · ' + shownNights + ' notti · ' + fmtUSD(shownUSD) + ' netti';
     el.innerHTML = sorted.map(b => {
       let priceStr = '';
       if (b.price) {
@@ -1512,7 +1612,26 @@
   document.getElementById('bookingsFilterReset').addEventListener('click', () => {
     bookingsFilterFromEl.value = '';
     bookingsFilterToEl.value = '';
+    bookingsSearchEl.value = '';
+    Object.keys(bookingsSourceFilter).forEach(k => { bookingsSourceFilter[k] = false; });
     renderBookingList();
+  });
+  bookingsSearchEl.addEventListener('input', renderBookingList);
+  document.querySelectorAll('#bookingsPeriodChips .chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const r = bookingPeriodPreset(ch.getAttribute('data-period'));
+      const already = bookingsFilterFromEl.value === r[0] && bookingsFilterToEl.value === r[1];
+      bookingsFilterFromEl.value = already ? '' : r[0]; // secondo tocco sullo stesso periodo: lo toglie
+      bookingsFilterToEl.value = already ? '' : r[1];
+      renderBookingList();
+    });
+  });
+  document.querySelectorAll('#bookingsSourceChips .chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const k = ch.getAttribute('data-source');
+      bookingsSourceFilter[k] = !bookingsSourceFilter[k];
+      renderBookingList();
+    });
   });
   // Comprimi/espandi la lista "Tutte le prenotazioni" (utile soprattutto da mobile
   // con tante prenotazioni salvate).
@@ -1558,6 +1677,28 @@
     syncPeriodToViewMonth();
     renderAll();
   });
+
+  // Sul telefono il mese si cambia anche strisciando il dito sul calendario (sinistra = mese
+  // dopo, destra = mese prima). Un tocco semplice resta un tocco: la scelta delle date non cambia.
+  (function(){
+    const grid = document.getElementById('calGrid');
+    let sx = 0, sy = 0, st = 0, tracking = false;
+    grid.addEventListener('touchstart', (e) => {
+      tracking = e.touches.length === 1;
+      if (!tracking) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    }, { passive: true });
+    grid.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
+    grid.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) < 56 || Math.abs(dx) < 2 * Math.abs(dy) || Date.now() - st > 800) return;
+      document.getElementById(dx < 0 ? 'nextMonth' : 'prevMonth').click();
+      if (grid.animate) grid.animate([{ opacity: .35, transform: 'translateX(' + (dx < 0 ? 28 : -28) + 'px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+    }, { passive: true });
+  })();
 
   // ---------- blocco scroll di sfondo (stabilità su iPhone) ----------
   let savedScrollY = 0;
@@ -1645,7 +1786,9 @@
       document.getElementById('bookingId').value = '';
       document.getElementById('currency').value = 'THB';
       document.getElementById('cleaningTime').value = '11:00';
-      document.getElementById('cleaningStatus').value = 'scheduled';
+      // Regola: ogni prenotazione nuova nasce con la pulizia «da pianificare»; a «pianificata»
+      // e poi a «fatta» la porta solo chi gestisce la villa.
+      document.getElementById('cleaningStatus').value = 'unscheduled';
       document.getElementById('cleaningCostCurrency').value = 'THB';
       const ci = (prefill && prefill.checkin) ? prefill.checkin : todayISO();
       const co = (prefill && prefill.checkout) ? prefill.checkout : addDays(ci,2);
@@ -1725,7 +1868,7 @@
   const cleaningOverlay = document.getElementById('cleaningOverlay');
   const cleaningForm = document.getElementById('cleaningForm');
 
-  function openCleaningModal(id){
+  function openCleaningModal(id, presetDate){
     cleaningForm.reset();
     document.getElementById('deleteCleaningBtn').style.display = id ? 'inline-block' : 'none';
     if (id) {
@@ -1741,7 +1884,7 @@
     } else {
       document.getElementById('cleaningModalTitle').textContent = 'Pulizia extra';
       document.getElementById('cleaningId').value = '';
-      document.getElementById('extraCleaningDate').value = todayISO();
+      document.getElementById('extraCleaningDate').value = presetDate || todayISO();
       document.getElementById('extraCleaningTime').value = '11:00';
       document.getElementById('extraCleaningCurrency').value = 'THB';
       document.getElementById('extraCleaningStatus').value = 'scheduled';

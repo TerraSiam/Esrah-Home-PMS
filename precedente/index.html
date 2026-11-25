@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Calendario Prenotazioni</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<meta name="theme-color" content="#0F766E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Esrah Home">
+<style>
+  :root {
+    color-scheme: light;
+    --airbnb: #FF385C;
+    --booking: #003580;
+    --diretta: #16A34A;
+    --altro: #78716C;
+    --clean: #10B981;
+    --clean-done: #6EE7B7;
+    --clean-unscheduled: #F59E0B;
+    --bg: #FAF8F4;
+    --card: #FFFFFF;
+    --border: #EAE4D9;
+    --text: #211C17;
+    --muted: #7A7268;
+    --accent: #1C1917;
+    --brand: #0F766E;
+    --brand-dark: #0B5A54;
+    --brand-light: #CCFBF1;
+    --shadow: 0 1px 2px rgba(28,25,23,.05), 0 4px 14px rgba(28,25,23,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 20px 60px; }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    height: 210px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--brand-dark), #1C1917);
+    box-shadow: var(--shadow);
+  }
+  .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(11,20,19,0) 20%, rgba(11,20,19,.78) 100%);
+  }
+  .hero-content { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 22px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .hero-tagline { color: rgba(255,255,255,.82); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .property-name {
+    font-size: 26px;
+    font-weight: 800;
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 2px 0;
+    border-bottom: 2px solid transparent;
+    width: 100%;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 6px rgba(0,0,0,.35);
+    letter-spacing: -.01em;
+  }
+  .hero-title { flex: 1 1 auto; min-width: 0; }
+  .property-name:focus { outline: none; border-bottom: 2px solid rgba(255,255,255,.65); }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toolbar-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background .12s ease, border-color .12s ease, transform .05s ease;
+  }
+  button:hover { background: #F3EFE6; border-color: #DDD4C4; }
+  button:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+  }
+  .btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .btn-danger { color: #DC2626; border-color: #FCA5A5; background: #FEF2F2; }
+  .btn-danger:hover { background: #FEE2E2; }
+  .btn-small { padding: 5px 10px; font-size: 12px; }
+
+  /* USD banner */
+  .usd-banner-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .usd-banner {
+    background: linear-gradient(135deg, var(--brand-dark), #1C1917);
+    color: #fff;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .usd-banner .label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; font-weight: 700; }
+  .usd-banner .value-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .usd-banner .value { font-size: 24px; font-weight: 800; }
+  .usd-banner .value-thb { font-size: 13px; font-weight: 700; opacity: .88; color: var(--brand-light); }
+  .usd-banner .sub { font-size: 12px; opacity: .78; margin-top: 2px; }
+  .rates-toggle-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .rates-toggle-row button {
+    background: var(--card);
+  }
+  .rates-panel {
+    display: none;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    gap: 14px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+  .rates-panel.open { display: flex; }
+  .rates-panel .field { margin-bottom: 0; min-width: 150px; }
+  .rates-panel .rate-note { font-size: 11px; color: var(--muted); width: 100%; }
+
+  /* Stat cards */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 18px; font-weight: 800; margin-top: 4px; color: var(--accent); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat-card-clickable { cursor: pointer; transition: box-shadow .12s ease, transform .05s ease; }
+  .stat-card-clickable:hover { box-shadow: 0 0 0 2px var(--brand), var(--shadow); }
+  .stat-card-clickable:active { transform: translateY(1px); }
+  .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .card-header-row h2 { margin: 0; }
+
+  .layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 4px; font-weight: 800; letter-spacing: -.01em; }
+  .card .hint { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+
+  /* Calendar */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav .month-label { font-weight: 800; font-size: 15px; text-transform: capitalize; letter-spacing: -.01em; }
+  .cal-hint { font-size: 12px; color: var(--brand-dark); margin-bottom: 10px; background: var(--brand-light); border-radius: 8px; padding: 6px 10px; font-weight: 600; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { font-size: 11px; color: var(--muted); text-align: center; font-weight: 700; padding-bottom: 4px; }
+  .cal-day {
+    min-height: 68px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    padding: 4px 5px;
+    position: relative;
+    font-size: 12px;
+    background: #FCFBF8;
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .cal-day:hover { border-color: var(--brand); background: #F5FBFA; }
+  .cal-day.empty { background: transparent; border: none; cursor: default; }
+  .cal-day.empty:hover { border-color: transparent; background: transparent; }
+  .cal-day .num { font-weight: 700; color: var(--accent); font-size: 12px; }
+  .cal-day.today { border: 1.5px solid var(--brand); }
+  .cal-day.selected-start { background: var(--brand-light); border: 1.5px solid var(--brand); }
+  .cal-bar {
+    margin-top: 3px;
+    border-radius: 4px;
+    padding: 1px 4px;
+    font-size: 10px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cal-bar-clean {
+    box-shadow: 0 0 0 1px rgba(6,95,70,.35);
+    font-weight: 800;
+  }
+  /* Le pulizie "extra" (non legate a un check-out) hanno un bordo tratteggiato invece
+     dell'anello continuo, cosi si distinguono a colpo d'occhio da quelle ordinarie. */
+  .cal-bar-clean-extra {
+    box-shadow: none;
+    border: 1.5px dashed rgba(28,25,23,.5);
+    font-weight: 800;
+  }
+  /* Indicatore di check-in/check-out a metà cella: una barra colorata occupa solo
+     metà giornata (arrivo = metà destra, partenza = metà sinistra) con un simbolo
+     di "interruzione" nel punto di mezzo, per rendere evidente il cambio ospiti. */
+  .turn-indicator {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    height: 6px;
+  }
+  .turn-bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .turn-bar.checkout-half { left: 0; width: calc(50% - 1px); }
+  .turn-bar.checkin-half { right: 0; width: calc(50% - 1px); }
+  .turn-symbol {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(17,24,39,.3);
+    font-size: 8px;
+    line-height: 12px;
+    text-align: center;
+    color: #111827;
+    pointer-events: none;
+  }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* List */
+  .booking-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .booking-item:hover { border-color: #DDD4C4; background: #FDFCFA; }
+  .booking-item .b-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .src-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .b-info { min-width: 0; }
+  .b-guest { font-weight: 700; font-size: 13px; }
+  .b-dates { font-size: 12px; color: var(--muted); }
+  .b-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .clean-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .clean-badge.unscheduled { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+  .clean-badge.scheduled { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+  .clean-badge.done { background: #DCFCE7; color: #166534; border-color: #BBF7D0; }
+  .empty-state { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+  /* Period stats card */
+  .period-inputs { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+  .period-inputs .field { margin-bottom: 0; }
+  .period-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; }
+  .period-results .stat-card { padding: 10px 12px; }
+  .period-results .stat-value { font-size: 16px; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+    overscroll-behavior: contain;
+  }
+  .overlay.open { display: flex; }
+  /* Blocca lo scroll della pagina sotto al modulo mentre è aperto: su iPhone, senza
+     questo, lo sfondo "rimbalza" e la pagina sembra spostarsi mentre si compila il form. */
+  body.modal-open { position: fixed; left: 0; right: 0; width: 100%; overflow: hidden; }
+  .modal {
+    background: #fff; border-radius: 18px; padding: 22px;
+    width: 440px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(28,25,23,.25);
+  }
+  .modal h3 { margin: 0 0 14px; font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border);
+    font-family: inherit; font-size: 13px; color: var(--text);
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light);
+  }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .field-row .field.narrow { flex: 0 0 110px; }
+  .section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: 16px 0 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .warn-box {
+    background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B;
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-bottom: 12px; display: none;
+  }
+  .warn-box.show { display: block; }
+  .footer-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 18px; }
+
+  /* ---------- Mobile (telefono) ---------- */
+  @media (max-width: 560px) {
+    /* Evita lo scroll orizzontale/"scatto" che iOS Safari puo introdurre quando un
+       elemento usa 100vw: il layout viewport puo risultare piu largo di quello visibile. */
+    html { overflow-x: hidden; }
+    body { font-size: 13px; overflow-x: hidden; width: 100%; }
+    .wrap { padding: 12px 10px 40px; overflow-x: hidden; }
+    /* Le celle di grid/flex (calendario, statistiche, liste) hanno di default una
+       larghezza minima "auto" basata sul loro contenuto: se un numero o un'etichetta
+       e piu larga della colonna disponibile, l'intera griglia si allarga oltre lo
+       schermo invece di andare a capo. Azzerare min-width lascia che testo/ellissi
+       facciano il loro lavoro e la pagina resti sempre dentro lo schermo. */
+    * { min-width: 0; }
+    .hero { height: 150px; border-radius: 14px; }
+    .hero-content { padding: 12px 14px; }
+    .property-name { font-size: 19px; max-width: 100%; }
+    .hero-tagline { font-size: 10px; }
+    .header-actions { width: 100%; }
+    .header-actions button { flex: 1 1 auto; font-size: 12px; padding: 8px 8px; }
+    .usd-banner-row { grid-template-columns: 1fr; }
+    .usd-banner { padding: 12px 14px; }
+    .usd-banner .value { font-size: 20px; }
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 10px 12px; }
+    .card { padding: 12px; }
+    /* Su mobile il suggerimento "Clicca sulla data di arrivo..." occupa spazio prezioso:
+       lo nascondiamo per lasciare piu posto (e caselle piu grandi/leggibili) al calendario. */
+    .cal-hint { display: none; }
+    .cal-grid { gap: 3px; }
+    .cal-day { min-height: 60px; padding: 3px 4px; }
+    .cal-day .num { font-size: 11px; }
+    .cal-bar { font-size: 9px; padding: 2px 3px; }
+    .cal-dow { font-size: 10px; }
+    .legend { font-size: 10px; gap: 8px; }
+    .period-inputs { gap: 8px; }
+    .period-results { grid-template-columns: repeat(2, 1fr); }
+    .modal { width: 100%; max-width: 100%; padding: 16px; border-radius: 14px 14px 0 0; box-sizing: border-box; }
+    .overlay { align-items: flex-end; }
+    .field-row { flex-wrap: wrap; }
+    .field-row .field { min-width: 130px; }
+    .field-row .field.narrow { flex: 1 1 100px; }
+    /* Alcune etichette (es. "Prezzo totale (opzionale)") vanno a capo su due righe mentre
+       quelle accanto (es. "Valuta") restano su una riga sola: senza un'altezza minima
+       uguale per tutte, i campi della stessa riga finiscono disallineati verticalmente. */
+    .field-row .field label { min-height: 30px; display: flex; align-items: flex-end; }
+    .booking-item { flex-wrap: wrap; }
+    .rates-panel .field { min-width: 120px; }
+    /* iOS Safari zooma automaticamente la pagina quando il font di un campo è sotto
+       16px: qui sopra a 16px per evitare lo "spostamento"/zoom improvviso al tocco. */
+    .field input, .field select, .field textarea { font-size: 16px; }
+  }
+
+  /* ---------- Ritocchi d'uso (novembre 2026): solo aspetto, nessuna funzione cambiata ---------- */
+  .stat-value, .usd-banner .value, .usd-banner .value-thb, .b-dates, .cal-day .num { font-variant-numeric: tabular-nums; }
+  button:focus-visible, .clean-badge:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .b-left { flex: 1 1 auto; }
+  .b-dates { line-height: 1.4; }
+  .clean-badge { display: inline-flex; align-items: center; user-select: none; -webkit-user-select: none; transition: filter .12s ease; }
+  .clean-badge:hover { filter: brightness(.96); }
+  .nights-hint { font-size: 12px; font-weight: 700; color: var(--brand-dark); margin: -6px 0 12px; min-height: 16px; }
+  .rates-panel .rate-note { line-height: 1.45; }
+  @media (min-width: 1100px) {
+    /* i sette riquadri su una riga sola, senza quello rimasto solo a capo */
+    .stats { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .stats .stat-label { font-size: 10px; letter-spacing: .03em; }
+    .stats .stat-card { padding: 14px 12px; }
+  }
+  @media (max-width: 560px) {
+    /* bersagli comodi per il dito: almeno 44 px */
+    button { min-height: 44px; font-size: 14px; }
+    .btn-small { min-height: 40px; padding: 8px 14px; font-size: 13px; }
+    .header-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .header-actions button { font-size: 13px; padding: 8px 6px; }
+    .header-actions #addBtn { grid-column: 1 / -1; min-height: 48px; font-size: 15px; }
+    .toolbar-row { margin-bottom: 12px; }
+    /* i tre incassi in un unico riquadro compatto, nello stesso ordine */
+    .usd-banner-row { gap: 0; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); background: linear-gradient(135deg, var(--brand-dark), #1C1917); }
+    .usd-banner { background: none; border-radius: 0; box-shadow: none; padding: 11px 14px; }
+    .usd-banner + .usd-banner { border-top: 1px solid rgba(255,255,255,.14); }
+    .usd-banner .label { font-size: 10px; }
+    .stats .stat-card:last-child:nth-child(odd), .period-results .stat-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .stat-label { font-size: 10px; }
+    /* elenchi: etichetta sopra il nome, azione sempre a destra sulla stessa riga */
+    .booking-item { flex-wrap: nowrap; align-items: center; padding: 10px 12px; }
+    .booking-item .b-left { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .b-guest { font-size: 14px; }
+    .clean-badge { min-height: 40px; padding: 8px 14px; font-size: 12px; }
+    .b-actions { flex-direction: column; align-items: stretch; }
+    .card-header-row { flex-wrap: wrap; }
+    .field input, .field select { min-height: 44px; }
+    .field label { font-size: 12px; }
+    /* modulo: «Salva» sempre a portata di pollice, senza dover scorrere fino in fondo */
+    .modal { max-height: 92vh; max-height: 92dvh; }
+    .modal-actions { position: sticky; bottom: -16px; margin: 16px -16px -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 1px solid var(--border); }
+    .modal-actions button { flex: 1 1 0; min-height: 46px; font-size: 15px; }
+    .modal-actions .btn-danger { flex: 0 0 auto; }
+    .footer-note { line-height: 1.5; padding: 0 8px; }
+  }
+
+  /* ---------- Calendario più leggibile (novembre 2026) ---------- */
+  .cal-grid { --cal-step: 16px; grid-template-columns: repeat(7, minmax(0, 1fr)); } /* --cal-step: bordi + margini interni + distanza fra due caselle */
+  .layout > div { min-width: 0; }
+  .cal-day { min-width: 0; min-height: 84px; display: flex; flex-direction: column; align-items: stretch; }
+  .cal-day .num { order: 0; align-self: flex-start; line-height: 20px; }
+  .cal-day.weekend { background: #F8F5EE; }
+  .cal-day.past .num { color: var(--muted); font-weight: 600; }
+  .cal-day.today .num { background: var(--brand); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; padding: 0 6px; text-align: center; }
+  .cal-day.today { box-shadow: 0 0 0 1px var(--brand); }
+  .cal-bar { order: 2; font-size: 11px; line-height: 16px; padding: 1px 6px; flex: 0 0 auto; }
+  /* Il soggiorno è una barra continua per ogni riga della settimana, con il nome scritto per intero:
+     la barra "di testa" si allunga sopra i giorni seguenti, che restano al loro posto ma nascosti. */
+  .cal-bar-stay { order: 1; }
+  .cal-bar-head { position: relative; z-index: 2; align-self: flex-start; width: calc(var(--span, 1) * 100% + (var(--span, 1) - 1) * var(--cal-step)); max-width: none; }
+  .cal-bar-head.cal-bar-cont { opacity: .72 !important; }
+  .cal-bar-covered { visibility: hidden; }
+  .cal-nav { gap: 8px; }
+  .cal-nav-center { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .cal-nav .month-label { font-size: 16px; }
+  .legend { row-gap: 6px; }
+  @media (max-width: 560px) {
+    .cal-grid { --cal-step: 13px; }
+    .cal-day { min-height: 64px; }
+    .cal-bar { font-size: 10px; line-height: 15px; padding: 1px 4px; }
+    .cal-nav .month-label { font-size: 15px; }
+    .cal-nav-center { gap: 6px; }
+    /* nelle caselle strette l'ora della pulizia si legge per intero: la parola resta solo al computer */
+    .cal-bar-clean { padding: 1px 1px; font-size: 9px; letter-spacing: -.03em; text-overflow: clip; text-align: center; }
+    .cal-bar-clean .cal-bar-word { display: none; }
+    /* il suggerimento resta nascosto, ma compare mentre stai scegliendo le date */
+    .cal-hint.selecting { display: block; }
+  }
+  .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+  .activation.open { display: flex; }
+  .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
+  .activation-card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 800; color: var(--text); }
+  .activation-card p { margin: 0 0 14px; font-size: 14px; color: var(--muted); line-height: 1.4; }
+  .activation-card input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; letter-spacing: .04em; text-transform: uppercase; font-family: ui-monospace, Menlo, monospace; }
+  .activation-msg { min-height: 20px; margin: 8px 0; font-size: 13px; color: #B91C1C; }
+  .activation-card button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .activation-card button:disabled { opacity: .6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <img class="hero-img" src="villa-hero.jpg" alt="Esrah Garden Home Villa" decoding="async" />
+    <div class="hero-scrim"></div>
+    <div class="hero-content">
+      <div class="hero-title">
+        <div class="hero-tagline">Gestione prenotazioni &amp; pulizie</div>
+        <input class="property-name" id="propertyName" value="Esrah Garden Home Villa" />
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="header-actions">
+      <button id="exportBtn">Esporta backup</button>
+      <button id="importBtn">Importa backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button id="addCleaningBtn">+ Pulizia extra</button>
+      <button class="btn-primary" id="addBtn">+ Nuova prenotazione</button>
+    </div>
+  </div>
+
+  <div class="usd-banner-row">
+    <div class="usd-banner">
+      <div>
+        <div class="label">Incassi YTD (dall'1 gennaio a oggi)</div>
+        <div class="value-row">
+          <div class="value" id="ytdUsdTotal">$0</div>
+          <div class="value-thb" id="ytdThbTotal">฿0</div>
+        </div>
+        <div class="sub" id="ytdSub"></div>
+      </div>
+    </div>
+    <div class="usd-banner">
+      <div>
+        <div class="label">Incassi anno (YT, incluse future fino al 31/12)</div>
+        <div class="value-row">
+          <div class="value" id="ytUsdTotal">$0</div>
+          <div class="value-thb" id="ytThbTotal">฿0</div>
+        </div>
+        <div class="sub" id="ytSub"></div>
+      </div>
+    </div>
+    <div class="usd-banner">
+      <div>
+        <div class="label">Totale incassi di sempre (tutte le prenotazioni, anche future)</div>
+        <div class="value-row">
+          <div class="value" id="usdTotal">$0</div>
+          <div class="value-thb" id="thbTotal">฿0</div>
+        </div>
+        <div class="sub" id="usdSub"></div>
+      </div>
+    </div>
+  </div>
+  <div class="rates-toggle-row">
+    <button id="toggleRates">Tassi di cambio ▾</button>
+  </div>
+  <div class="rates-panel" id="ratesPanel">
+    <div class="field">
+      <label>1 EUR = ? USD</label>
+      <input type="number" id="rateEUR" step="0.0001" min="0" />
+    </div>
+    <div class="field">
+      <label>1 THB = ? USD</label>
+      <input type="number" id="rateTHB" step="0.0001" min="0" />
+    </div>
+    <div class="field" style="min-width:auto;">
+      <button class="btn-primary" id="saveRates">Salva tassi manuali</button>
+    </div>
+    <div class="field" style="min-width:auto;">
+      <button type="button" id="useWebRates">Usa tasso aggiornato dal web</button>
+    </div>
+    <div class="rate-note">I cambi si aggiornano da soli ogni giorno. Se ne modifichi uno a mano qui, resta fisso finché non premi "Usa tasso aggiornato dal web". USD resta fisso a 1.</div>
+  </div>
+
+  <div class="stats" id="statsRow"></div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="cal-nav">
+          <button class="btn-small" id="prevMonth">‹ Prec</button>
+          <div class="cal-nav-center">
+            <div class="month-label" id="monthLabel"></div>
+            <button class="btn-small" type="button" id="todayBtn" title="Torna al mese di oggi">Oggi</button>
+          </div>
+          <button class="btn-small" id="nextMonth">Succ ›</button>
+        </div>
+        <div class="cal-hint" id="calHint">Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.</div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--airbnb)"></span>Airbnb</span>
+          <span><span class="dot" style="background:var(--booking)"></span>Booking</span>
+          <span><span class="dot" style="background:var(--diretta)"></span>Diretta</span>
+          <span><span class="dot" style="background:var(--altro)"></span>Altro</span>
+          <span><span class="dot" style="background:var(--clean-unscheduled)"></span>▨ Pulizia da pianificare</span>
+          <span><span class="dot" style="background:var(--clean)"></span>▨ Pulizia pianificata</span>
+          <span><span class="dot" style="background:var(--clean-done)"></span>▨ Pulizia fatta</span>
+          <span><span class="dot" style="background:var(--clean);border:1.5px dashed rgba(28,25,23,.55)"></span>✦ Pulizia extra</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>ADR e occupazione per periodo</h2>
+        <p class="hint">Scegli un intervallo di date: occupazione, ADR e ricavi (in USD) si aggiornano in automatico.</p>
+        <div class="period-inputs">
+          <div class="field">
+            <label>Dal</label>
+            <input type="date" id="periodFrom" />
+          </div>
+          <div class="field">
+            <label>Al</label>
+            <input type="date" id="periodTo" />
+          </div>
+        </div>
+        <div class="period-results" id="periodResults"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" id="cleaningSection">
+        <div class="card-header-row">
+          <h2>Prossime pulizie</h2>
+          <button class="btn-small" type="button" id="cleaningUndoBtn" style="display:none;">↩ Annulla ultima azione</button>
+        </div>
+        <p class="hint">Pulizie generate dai check-out e pulizie extra, con costo se inserito.</p>
+        <div id="cleaningList"></div>
+      </div>
+      <div class="card" id="bookingsSection">
+        <div class="card-header-row">
+          <h2>Tutte le prenotazioni</h2>
+          <button class="btn-small" type="button" id="bookingsToggleBtn" aria-expanded="true">Comprimi ▾</button>
+        </div>
+        <div id="bookingsBody">
+          <div class="period-inputs" style="margin-bottom:12px;">
+            <div class="field">
+              <label>Dal</label>
+              <input type="date" id="bookingsFilterFrom" />
+            </div>
+            <div class="field">
+              <label>Al</label>
+              <input type="date" id="bookingsFilterTo" />
+            </div>
+            <button class="btn-small" type="button" id="bookingsFilterReset">Mostra tutte</button>
+          </div>
+          <div id="bookingList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note"><span id="syncNote">Dati sincronizzati con il foglio condiviso.</span> Usa "Esporta backup" per conservare una copia in più.</div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Nuova prenotazione</h3>
+    <div class="warn-box" id="warnBox"></div>
+    <form id="bookingForm">
+      <input type="hidden" id="bookingId" />
+      <div class="field">
+        <label>Nome ospite</label>
+        <input type="text" id="guest" required placeholder="es. Mario Rossi" autocomplete="off" autocapitalize="words" autocorrect="off" enterkeyhint="next" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Canale</label>
+          <select id="source">
+            <option value="airbnb">Airbnb</option>
+            <option value="booking">Booking.com</option>
+            <option value="diretta">Prenotazione diretta</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>N. ospiti</label>
+          <input type="number" id="guestsCount" min="1" value="2" inputmode="numeric" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Check-in</label>
+          <input type="date" id="checkin" required />
+        </div>
+        <div class="field">
+          <label>Check-out</label>
+          <input type="date" id="checkout" required />
+        </div>
+      </div>
+      <div class="nights-hint" id="nightsHint"></div>
+      <div class="field-row">
+        <div class="field">
+          <label>Prezzo totale (opzionale)</label>
+          <input type="number" id="price" min="0" step="0.01" placeholder="es. 320" inputmode="decimal" />
+        </div>
+        <div class="field narrow">
+          <label>Valuta</label>
+          <select id="currency">
+            <option value="THB">THB</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Note (opzionale)</label>
+        <textarea id="notes" rows="2" placeholder="es. arrivo tardi, richiesta culla..."></textarea>
+      </div>
+
+      <div class="section-label">Pulizia</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Data pulizia</label>
+          <input type="date" id="cleaningDate" />
+        </div>
+        <div class="field narrow">
+          <label>Ora</label>
+          <input type="time" id="cleaningTime" value="11:00" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Costo pulizia (opzionale)</label>
+          <input type="number" id="cleaningCost" min="0" step="0.01" placeholder="es. 15" inputmode="decimal" />
+        </div>
+        <div class="field narrow">
+          <label>Valuta</label>
+          <select id="cleaningCostCurrency">
+            <option value="THB">THB</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Stato pulizia</label>
+        <select id="cleaningStatus">
+          <option value="unscheduled">Non ancora pianificata</option>
+          <option value="scheduled">Pianificata</option>
+          <option value="done">Completata</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="deleteBtn" class="btn-danger" style="display:none;margin-right:auto;">Elimina</button>
+        <button type="button" id="cancelBtn">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="cleaningOverlay">
+  <div class="modal">
+    <h3 id="cleaningModalTitle">Pulizia extra</h3>
+    <p class="hint" style="margin-top:-6px;">Per una pulizia non legata a un check-out (es. pulizia di mantenimento, cambio biancheria fuori prenotazione).</p>
+    <form id="cleaningForm">
+      <input type="hidden" id="cleaningId" />
+      <div class="field-row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="extraCleaningDate" required />
+        </div>
+        <div class="field narrow">
+          <label>Ora</label>
+          <input type="time" id="extraCleaningTime" value="11:00" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Costo (opzionale)</label>
+          <input type="number" id="extraCleaningCost" min="0" step="0.01" placeholder="es. 15" inputmode="decimal" />
+        </div>
+        <div class="field narrow">
+          <label>Valuta</label>
+          <select id="extraCleaningCurrency">
+            <option value="THB">THB</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Note (opzionale)</label>
+        <textarea id="extraCleaningNotes" rows="2" placeholder="es. motivo della pulizia extra"></textarea>
+      </div>
+      <div class="field">
+        <label>Stato pulizia</label>
+        <select id="extraCleaningStatus">
+          <option value="unscheduled">Non ancora pianificata</option>
+          <option value="scheduled">Pianificata</option>
+          <option value="done">Completata</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="deleteCleaningBtn" class="btn-danger" style="display:none;margin-right:auto;">Elimina</button>
+        <button type="button" id="cancelCleaningBtn">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="backupWarning" style="display:none; margin:16px auto; max-width:720px; padding:10px 14px; border:1px solid #F59E0B; border-radius:10px; background:#FFFBEB; color:#92400E; font-size:13px;">
+  Il backup automatico del foglio non gira da più di 3 giorni: fai «Esporta backup» e avvisa chi segue il PMS.
+</div>
+
+<div class="activation" id="activation">
+  <div class="activation-card">
+    <h3>Attiva questo dispositivo</h3>
+    <p>Inserisci il codice di attivazione. Serve una sola volta: poi l'app si apre come sempre.</p>
+    <input id="activationCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" />
+    <div class="activation-msg" id="activationMsg"></div>
+    <button type="button" id="activationBtn">Attiva</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'airbnb_booking_calendar_v1';
+  // Accesso al backend (Google Apps Script, vedi Code.gs). L'indirizzo NON è scritto in
+  // chiaro in questa pagina (che è pubblica): è cifrato qui sotto e si apre solo con il
+  // codice di attivazione, inserito una sola volta per dispositivo e poi ricordato.
+  // Lo stesso codice accompagna ogni richiesta: senza, il backend rifiuta letture e scritture.
+  const ACCESS_STORE = 'esrah_pms_access_v1';
+  const ENC_BACKEND = {"s": "DrsnkG982aRJRBKW6UD1oQ==", "i": "F+dQxkqeqe0VSeY+", "c": "0gmJDAcjNT3n9xxvnCSEysifAO72OAdAfT+NiSWlTQi/5i1Bm9G7eztSOv/8bwRqMtjU2kf/8g3qFqZV1HHoRN21C/wK8tW8hywMzoqh+bty97tTXKrYR5da4Y75ka6xK3hY0rfjd29FAf15nDxpa0ZWfVqTyBqhZOdJvGxtROE="};
+  let WEBAPP_URL = '';
+  let ACCESS_KEY = '';
+  try {
+    const acc = JSON.parse(localStorage.getItem(ACCESS_STORE) || 'null');
+    if (acc && acc.u && acc.k) { WEBAPP_URL = acc.u; ACCESS_KEY = acc.k; }
+  } catch(e) {}
+  const SOURCE_COLORS = { airbnb: 'var(--airbnb)', booking: 'var(--booking)', diretta: 'var(--diretta)', altro: 'var(--altro)' };
+  const SOURCE_LABELS = { airbnb: 'Airbnb', booking: 'Booking', diretta: 'Diretta', altro: 'Altro' };
+  const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const DOWS = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  // Cambi di riserva (USD per 1 unità di valuta), usati solo finché il dispositivo non ha
+  // ancora letto il backend. I cambi veri li aggiorna ogni giorno il backend (refreshRates
+  // in Code.gs) e arrivano qui con i dati.
+  const EMBEDDED_RATES = { EUR: 1.0939, THB: 0.02937, fetchedAt: '2026-11-24' };
+  const DEFAULT_RATES = { EUR: EMBEDDED_RATES.EUR, USD: 1, THB: EMBEDDED_RATES.THB };
+  // Stato di partenza vuoto: i dati veri arrivano dal backend dopo l'attivazione (o dalla
+  // copia salvata su questo dispositivo). Nessun dato degli ospiti è scritto nel codice.
+  const SEED_DATA = {
+    "propertyName": "Esrah Garden Home Villa",
+    "bookings": [],
+    "rates": { "EUR": EMBEDDED_RATES.EUR, "USD": 1, "THB": EMBEDDED_RATES.THB },
+    "ratesFetchedAt": EMBEDDED_RATES.fetchedAt,
+    "cleanings": [],
+    "ratesManualOverride": false
+  };
+
+  let state = load();
+  let viewDate = new Date();
+  viewDate.setDate(1);
+  let selection = { start: null };
+
+  function load(){
+    let data = JSON.parse(JSON.stringify(SEED_DATA));
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) data = JSON.parse(raw);
+    } catch(e) {}
+    if (!data.rates) data.rates = { ...DEFAULT_RATES };
+    data.rates.USD = 1;
+    if (data.rates.EUR == null) data.rates.EUR = DEFAULT_RATES.EUR;
+    if (data.rates.THB == null) data.rates.THB = DEFAULT_RATES.THB;
+    // Se questa pagina porta tassi più recenti di quelli salvati e l'utente non li ha
+    // modificati a mano, li applica automaticamente: è così che "l'aggiornamento dal web"
+    // arriva all'app, ogni volta che Claude rigenera la pagina con i tassi freschi.
+    if (!data.ratesManualOverride && (!data.ratesFetchedAt || data.ratesFetchedAt < EMBEDDED_RATES.fetchedAt)) {
+      data.rates.EUR = EMBEDDED_RATES.EUR;
+      data.rates.THB = EMBEDDED_RATES.THB;
+      data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
+    }
+    if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
+    if (!data.cleanings) data.cleanings = [];
+    // migrate old bookings without currency/cleaning fields
+    (data.bookings || []).forEach(b => {
+      if (!b.currency) b.currency = 'THB';
+      if (!b.cleaningDate) b.cleaningDate = b.checkout;
+      if (!b.cleaningTime) b.cleaningTime = '11:00';
+      if (b.cleaningCost === undefined) b.cleaningCost = null;
+      if (!b.cleaningCostCurrency) b.cleaningCostCurrency = 'THB';
+      // vecchie prenotazioni avevano solo cleaningDone (booleano): fatta -> "done",
+      // non fatta -> si presume già "pianificata" (comportamento precedente), non gialla di default
+      if (!b.cleaningStatus) b.cleaningStatus = b.cleaningDone ? 'done' : 'scheduled';
+    });
+    data.cleanings.forEach(c => {
+      if (!c.status) c.status = c.done ? 'done' : 'scheduled';
+    });
+    return data;
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ---------- backend sync (Google Apps Script, opzionale) ----------
+  function backendEnabled(){ return !!WEBAPP_URL && !!ACCESS_KEY; }
+  // Tutte le richieste sono POST senza header (vedi PASSAGGIO.md: niente preflight CORS)
+  // e portano il codice di accesso.
+  async function callBackend(action, payload){
+    const res = await fetch(WEBAPP_URL, { method: 'POST', body: JSON.stringify({ action, key: ACCESS_KEY, ...(payload || {}) }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+  // Invio "fire and forget": non blocca l'interfaccia. Se fallisce (offline, ecc.) i
+  // dati restano comunque salvati in locale su questo dispositivo (vedi save()).
+  function postToBackend(action, payload){
+    if (!backendEnabled()) return;
+    callBackend(action, payload)
+      .then(r => { if (r && r.error === 'unauthorized') requireActivation(); })
+      .catch(() => { console.warn('Sincronizzazione col server non riuscita: ' + action); });
+  }
+  async function refreshFromBackend(){
+    if (!backendEnabled()) return;
+    try {
+      const data = await callBackend('data');
+      if (data && data.error === 'unauthorized') { requireActivation(); return; }
+      if (!data || !Array.isArray(data.bookings)) return;
+      // Rete di sicurezza: se il server risponde senza prenotazioni ma questo dispositivo
+      // ne ha già in locale, NON sovrascrivere (probabile che il server non sia ancora
+      // stato "seminato" col backup, o una risposta vuota temporanea) — evita di azzerare
+      // per errore i dati esistenti.
+      if (data.bookings.length === 0 && state.bookings && state.bookings.length > 0) {
+        console.warn('Il server condiviso risulta vuoto: mantengo i dati salvati su questo dispositivo per sicurezza.');
+        return;
+      }
+      if (!data.rates) data.rates = { ...DEFAULT_RATES };
+      data.rates.USD = 1;
+      if (!data.cleanings) data.cleanings = [];
+      data.bookings.forEach(b => {
+        if (!b.currency) b.currency = 'THB';
+        if (!b.cleaningTime) b.cleaningTime = '11:00';
+        if (!b.cleaningCostCurrency) b.cleaningCostCurrency = 'THB';
+        if (!b.cleaningStatus) b.cleaningStatus = 'scheduled';
+      });
+      data.cleanings.forEach(c => { if (!c.status) c.status = c.done ? 'done' : 'scheduled'; });
+      state = data;
+      save();
+      propertyNameEl.value = state.propertyName || 'Esrah Garden Home Villa';
+      renderAll();
+      renderBackupWarning();
+      setSyncNote('Dati sincronizzati con il foglio condiviso · aggiornati alle ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) + '.');
+    } catch(e) {
+      console.warn('Impossibile leggere i dati dal server, resto sulla copia locale.', e);
+      setSyncNote('Senza connessione: stai vedendo i dati salvati su questo dispositivo.');
+    }
+  }
+  function setSyncNote(text){ const el = document.getElementById('syncNote'); if (el) el.textContent = text; }
+  function uid(){ return 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function fmtDate(iso){
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  // Formatta una data (giorno di calendario "puro") senza mai passare da toISOString(),
+  // che converte in UTC e sfasa di un giorno nei fusi orari avanti rispetto a UTC
+  // (es. Thailandia UTC+7, Italia in estate UTC+2). Qui usiamo sempre i getter locali.
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function isoFromLocalDate(dateObj){
+    return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth()+1) + '-' + pad2(dateObj.getDate());
+  }
+  // y/m/d qui possono anche "sforare" (es. mese 12, giorno 0): il costruttore Date li
+  // normalizza correttamente (es. mese dopo dicembre -> gennaio anno dopo), poi leggiamo
+  // sempre con i getter locali (mai toISOString) per non sfasare di un giorno.
+  function isoFromYMD(y, m, d){ return isoFromLocalDate(new Date(y, m, d)); }
+  // "Oggi" è sempre calcolato con l'orario della Thailandia (UTC+7, senza ora legale),
+  // così il calendario è neutro rispetto al fuso orario del dispositivo su cui viene aperto.
+  function todayISO(){
+    const nowUtcMs = Date.now();
+    const bkk = new Date(nowUtcMs + 7 * 3600000);
+    return bkk.getUTCFullYear() + '-' + pad2(bkk.getUTCMonth()+1) + '-' + pad2(bkk.getUTCDate());
+  }
+  function addDays(iso, n){
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate()+n);
+    return isoFromLocalDate(d);
+  }
+  function nightsBetween(a,b){
+    return Math.round((new Date(b) - new Date(a)) / 86400000);
+  }
+  function overlaps(a, b){
+    return a.checkin < b.checkout && a.checkout > b.checkin;
+  }
+  function toUSD(amount, currency){
+    const rate = state.rates[currency];
+    return amount * (rate == null ? 1 : rate);
+  }
+  function fmtUSD(n){
+    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+  function usdToTHB(usd){
+    const rate = state.rates.THB;
+    return rate ? usd / rate : 0;
+  }
+  function fmtTHB(n){
+    return '฿' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+  // Stato pulizia: non ancora pianificata (giallo) -> pianificata (verde) -> fatta (verde chiaro).
+  function cleanStatusMeta(status){
+    if (status === 'unscheduled') return { color: 'var(--clean-unscheduled)', text: '#7C2D12', badge: 'unscheduled', label: 'Da pianificare', shortLabel: 'da pianificare' };
+    if (status === 'done') return { color: 'var(--clean-done)', text: '#065F46', badge: 'done', label: '✓ Fatta', shortLabel: 'fatta' };
+    return { color: 'var(--clean)', text: '#fff', badge: 'scheduled', label: 'Pianificata', shortLabel: 'pianificata' };
+  }
+  function nextCleanStatus(status){
+    if (status === 'unscheduled') return 'scheduled';
+    if (status === 'scheduled') return 'done';
+    return 'unscheduled';
+  }
+  // notti di una prenotazione che ricadono nell'intervallo [rangeStart, rangeEndExclusive)
+  function nightsInRangeCount(b, rangeStart, rangeEndExclusive){
+    const start = b.checkin > rangeStart ? b.checkin : rangeStart;
+    const end = b.checkout < rangeEndExclusive ? b.checkout : rangeEndExclusive;
+    if (end <= start) return 0;
+    return nightsBetween(start, end);
+  }
+  function computeStatsForRange(rangeStart, rangeEndExclusive){
+    const totalNights = Math.max(0, nightsBetween(rangeStart, rangeEndExclusive));
+    let occupiedNights = 0, revenueUSD = 0, adrNights = 0;
+    state.bookings.forEach(b => {
+      const n = nightsInRangeCount(b, rangeStart, rangeEndExclusive);
+      if (n > 0) {
+        occupiedNights += n;
+        if (b.price) {
+          const totalBookingNights = Math.max(1, nightsBetween(b.checkin, b.checkout));
+          const nightly = toUSD(Number(b.price), b.currency) / totalBookingNights;
+          revenueUSD += nightly * n;
+          adrNights += n;
+        }
+      }
+    });
+    const occPct = totalNights > 0 ? Math.round((occupiedNights/totalNights)*100) : 0;
+    const adr = adrNights > 0 ? revenueUSD/adrNights : null;
+    const revpar = totalNights > 0 ? revenueUSD/totalNights : null;
+    return { totalNights, occupiedNights, occPct, revenueUSD, adr, revpar };
+  }
+  // unisce le pulizie legate a una prenotazione (checkout) e quelle extra in un'unica lista
+  function allCleaningEntries(){
+    const fromBookings = state.bookings.map(b => ({
+      id: b.id, type: 'booking', label: b.guest, source: b.source,
+      date: b.cleaningDate, time: b.cleaningTime, cost: b.cleaningCost, currency: b.cleaningCostCurrency || 'THB',
+      status: b.cleaningStatus || 'scheduled',
+    }));
+    const fromExtra = state.cleanings.map(c => ({
+      id: c.id, type: 'extra', label: c.notes ? c.notes : 'Pulizia extra', source: null,
+      date: c.date, time: c.time, cost: c.cost, currency: c.currency || 'THB',
+      status: c.status || 'scheduled',
+    }));
+    return fromBookings.concat(fromExtra);
+  }
+  function computeCleaningCostForRange(rangeStart, rangeEndExclusive){
+    let totalUSD = 0, count = 0;
+    allCleaningEntries().forEach(c => {
+      if (c.date >= rangeStart && c.date < rangeEndExclusive && c.cost) {
+        totalUSD += toUSD(Number(c.cost), c.currency);
+        count++;
+      }
+    });
+    return { totalUSD, count };
+  }
+
+  // ---------- property name ----------
+  const propertyNameEl = document.getElementById('propertyName');
+  propertyNameEl.value = state.propertyName || 'Esrah Garden Home Villa';
+  propertyNameEl.addEventListener('change', () => {
+    state.propertyName = propertyNameEl.value.trim() || 'Esrah Garden Home Villa';
+    save();
+    postToBackend('saveConfig', { config: { propertyName: state.propertyName } });
+  });
+
+  // ---------- USD banner + rates ----------
+  const ratesPanel = document.getElementById('ratesPanel');
+  document.getElementById('toggleRates').addEventListener('click', () => {
+    ratesPanel.classList.toggle('open');
+    document.getElementById('rateEUR').value = state.rates.EUR;
+    document.getElementById('rateTHB').value = state.rates.THB;
+  });
+  document.getElementById('saveRates').addEventListener('click', () => {
+    const eur = parseFloat(document.getElementById('rateEUR').value);
+    const thb = parseFloat(document.getElementById('rateTHB').value);
+    if (eur > 0) state.rates.EUR = eur;
+    if (thb > 0) state.rates.THB = thb;
+    state.ratesManualOverride = true;
+    save();
+    postToBackend('saveConfig', { config: { rates: state.rates, ratesManualOverride: state.ratesManualOverride } });
+    ratesPanel.classList.remove('open');
+    renderAll();
+  });
+  document.getElementById('useWebRates').addEventListener('click', () => {
+    state.ratesManualOverride = false;
+    if (backendEnabled()) {
+      // il backend scarica i cambi di oggi, li salva e li rimanda a tutti i dispositivi
+      save();
+      renderAll();
+      callBackend('refreshRates', { force: true })
+        .then(() => refreshFromBackend())
+        .then(() => {
+          document.getElementById('rateEUR').value = state.rates.EUR;
+          document.getElementById('rateTHB').value = state.rates.THB;
+        })
+        .catch(() => { console.warn('Aggiornamento cambi non riuscito.'); });
+      return;
+    }
+    state.rates.EUR = EMBEDDED_RATES.EUR;
+    state.rates.THB = EMBEDDED_RATES.THB;
+    state.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
+    save();
+    document.getElementById('rateEUR').value = state.rates.EUR;
+    document.getElementById('rateTHB').value = state.rates.THB;
+    renderAll();
+  });
+  function renderUsdBanner(){
+    const today = todayISO();
+    const currentYear = Number(today.slice(0,4));
+    const yearStart = isoFromYMD(currentYear, 0, 1);
+    const nextYearStart = isoFromYMD(currentYear + 1, 0, 1);
+
+    // Totale di sempre: nessun filtro di data, tutte le prenotazioni.
+    const allTotal = state.bookings.reduce((s,b) => s + (b.price ? toUSD(Number(b.price), b.currency) : 0), 0);
+    // YTD: ricavi (per notte, come per ADR/periodo) dall'1 gennaio a oggi incluso.
+    const ytdStats = computeStatsForRange(yearStart, addDays(today, 1));
+    // YT: ricavi dell'intero anno corrente, incluse prenotazioni future già inserite fino al 31/12.
+    const ytStats = computeStatsForRange(yearStart, nextYearStart);
+
+    document.getElementById('usdTotal').textContent = fmtUSD(allTotal);
+    document.getElementById('thbTotal').textContent = '≈ ' + fmtTHB(usdToTHB(allTotal));
+    document.getElementById('ytdUsdTotal').textContent = fmtUSD(ytdStats.revenueUSD);
+    document.getElementById('ytdThbTotal').textContent = '≈ ' + fmtTHB(usdToTHB(ytdStats.revenueUSD));
+    document.getElementById('ytUsdTotal').textContent = fmtUSD(ytStats.revenueUSD);
+    document.getElementById('ytThbTotal').textContent = '≈ ' + fmtTHB(usdToTHB(ytStats.revenueUSD));
+
+    const source = state.ratesManualOverride ? 'inseriti a mano' : ('aggiornati dal web il ' + fmtDate(state.ratesFetchedAt));
+    const ratesLine = `Tassi (${source}): 1 EUR = $${state.rates.EUR} · 1 THB = $${state.rates.THB}`;
+    document.getElementById('usdSub').textContent = ratesLine;
+    document.getElementById('ytdSub').textContent = '1 gen ' + currentYear + ' → oggi';
+    document.getElementById('ytSub').textContent = '1 gen → 31 dic ' + currentYear;
+  }
+
+  // ---------- stats ----------
+  function renderStats(){
+    const today = todayISO();
+    const sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
+    const nextCheckin = sorted.find(b => b.checkin >= today);
+    const nextCheckout = [...state.bookings].sort((a,b)=>a.checkout.localeCompare(b.checkout)).find(b => b.checkout >= today);
+    const nextCleaning = allCleaningEntries()
+      .filter(c => c.date >= today && c.status !== 'done')
+      .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))[0];
+    const pendingCleanings = allCleaningEntries().filter(c => c.status !== 'done' && c.date <= addDays(today,14)).length;
+    const unscheduledCleanings = allCleaningEntries().filter(c => c.status === 'unscheduled').length;
+
+    const y = viewDate.getFullYear(), m = viewDate.getMonth();
+    const monthStart = isoFromYMD(y,m,1);
+    const monthEndExclusive = isoFromYMD(y,m+1,1);
+    const monthStats = computeStatsForRange(monthStart, monthEndExclusive);
+    const monthCleaningCost = computeCleaningCostForRange(monthStart, monthEndExclusive);
+
+    const cards = [
+      { label: 'Prossimo check-in', value: nextCheckin ? fmtDate(nextCheckin.checkin) : '—', sub: nextCheckin ? (nextCheckin.guest + ' · ' + SOURCE_LABELS[nextCheckin.source]) : 'Nessuna prenotazione futura' },
+      { label: 'Prossimo check-out', value: nextCheckout ? fmtDate(nextCheckout.checkout) : '—', sub: nextCheckout ? (nextCheckout.guest + ' · ' + SOURCE_LABELS[nextCheckout.source]) : '—' },
+      { label: 'Prossima pulizia pianificata', value: nextCleaning ? fmtDate(nextCleaning.date) : '—', sub: nextCleaning ? (nextCleaning.label + (nextCleaning.time ? ' · ore ' + nextCleaning.time : '') + ' · ' + cleanStatusMeta(nextCleaning.status).shortLabel) : 'Nessuna pulizia in programma' },
+      { label: 'Pulizie da fare (14gg)', value: pendingCleanings, sub: unscheduledCleanings > 0 ? (unscheduledCleanings + ' ancora da pianificare') : 'tutte pianificate', id: 'statCleaningCard', clickable: true },
+      { label: 'Occupazione ' + MONTHS[m].toLowerCase(), value: monthStats.occPct + '%', sub: monthStats.occupiedNights + ' / ' + monthStats.totalNights + ' notti' },
+      { label: 'ADR ' + MONTHS[m].toLowerCase(), value: monthStats.adr != null ? fmtUSD(monthStats.adr) : '—', sub: monthStats.adr != null ? 'tariffa media/notte' : 'nessun prezzo inserito' },
+      { label: 'Costo pulizie ' + MONTHS[m].toLowerCase(), value: fmtUSD(monthCleaningCost.totalUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(monthCleaningCost.totalUSD)) + '</span>', sub: monthCleaningCost.count + ' pulizie con costo inserito' },
+    ];
+    document.getElementById('statsRow').innerHTML = cards.map(c => `
+      <div class="stat-card${c.clickable ? ' stat-card-clickable' : ''}"${c.id ? ` id="${c.id}"` : ''}>
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('');
+    // La card "Pulizie da fare" porta direttamente alla lista "Prossime pulizie" sotto,
+    // sia su desktop che da mobile/app installata.
+    const cleaningStatCard = document.getElementById('statCleaningCard');
+    if (cleaningStatCard) {
+      cleaningStatCard.addEventListener('click', () => {
+        document.getElementById('cleaningSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
+
+  // ---------- period card ----------
+  const periodFromEl = document.getElementById('periodFrom');
+  const periodToEl = document.getElementById('periodTo');
+  function initPeriodDefaults(){
+    if (!periodFromEl.value) {
+      const y = viewDate.getFullYear(), m = viewDate.getMonth();
+      periodFromEl.value = isoFromYMD(y,m,1);
+      periodToEl.value = isoFromYMD(y,m+1,0);
+    }
+  }
+  // Quando si scorre il calendario di mese in mese, lo specchietto ADR/occupazione per
+  // periodo segue di default il mese visualizzato (si può comunque poi personalizzare
+  // l'intervallo a mano, finché non si cambia di nuovo mese).
+  function syncPeriodToViewMonth(){
+    const y = viewDate.getFullYear(), m = viewDate.getMonth();
+    periodFromEl.value = isoFromYMD(y,m,1);
+    periodToEl.value = isoFromYMD(y,m+1,0);
+  }
+  function renderPeriodStats(){
+    initPeriodDefaults();
+    const from = periodFromEl.value;
+    const to = periodToEl.value;
+    const el = document.getElementById('periodResults');
+    if (!from || !to || to < from) {
+      el.innerHTML = '<div class="empty-state">Seleziona un intervallo di date valido.</div>';
+      return;
+    }
+    const stats = computeStatsForRange(from, addDays(to,1));
+    const cards = [
+      { label: 'Notti nel periodo', value: stats.totalNights, sub: fmtDate(from) + ' → ' + fmtDate(to) },
+      { label: 'Notti occupate', value: stats.occupiedNights, sub: stats.occPct + '% occupazione' },
+      { label: 'Ricavi', value: fmtUSD(stats.revenueUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(stats.revenueUSD)) + '</span>', sub: 'convertiti automaticamente' },
+      { label: 'ADR (USD)', value: stats.adr != null ? fmtUSD(stats.adr) : '—', sub: 'tariffa media/notte' },
+      { label: 'RevPAR (USD)', value: stats.revpar != null ? fmtUSD(stats.revpar) : '—', sub: 'ricavo per notte disponibile' },
+    ];
+    el.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('');
+  }
+  periodFromEl.addEventListener('change', renderPeriodStats);
+  periodToEl.addEventListener('change', renderPeriodStats);
+
+  // ---------- calendar ----------
+  function dayHasBooking(iso){
+    return state.bookings.some(b => iso >= b.checkin && iso < b.checkout);
+  }
+  function renderCalendar(){
+    const y = viewDate.getFullYear(), m = viewDate.getMonth();
+    document.getElementById('monthLabel').textContent = MONTHS[m] + ' ' + y;
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    DOWS.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+    const firstDow = (new Date(y,m,1).getDay() + 6) % 7; // Monday=0
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    for (let i=0;i<firstDow;i++){
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+    const today = todayISO();
+
+    document.getElementById('calHint').classList.toggle('selecting', !!selection.start);
+    if (selection.start) {
+      document.getElementById('calHint').textContent =
+        'Data di arrivo selezionata: ' + fmtDate(selection.start) + '. Ora clicca sulla data di partenza (o clicca di nuovo per annullare).';
+    } else {
+      document.getElementById('calHint').textContent =
+        'Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.';
+    }
+
+    for (let d=1; d<=daysInMonth; d++){
+      const iso = isoFromYMD(y,m,d);
+      const cell = document.createElement('div');
+      const dowIndex = (firstDow + d - 1) % 7; // 0 = lunedì
+      cell.className = 'cal-day' + (iso === today ? ' today' : '') + (iso === selection.start ? ' selected-start' : '')
+        + (iso < today ? ' past' : '') + (dowIndex >= 5 ? ' weekend' : '');
+      // Solo aspetto: la prima barra di un soggiorno in ogni riga si allunga fino a fine riga
+      // (o fine soggiorno/mese) e porta il nome; le barre dei giorni coperti restano ma non si vedono.
+      const styleStayBar = (bar, b, isStart) => {
+        bar.classList.add('cal-bar-stay');
+        if (isStart || dowIndex === 0 || d === 1) {
+          const span = Math.max(1, Math.min(7 - dowIndex, nightsBetween(iso, b.checkout), daysInMonth - d + 1));
+          bar.classList.add('cal-bar-head');
+          if (!isStart) bar.classList.add('cal-bar-cont');
+          bar.style.setProperty('--span', span);
+        } else {
+          bar.classList.add('cal-bar-covered');
+        }
+      };
+      const num = document.createElement('div');
+      num.className = 'num';
+      num.textContent = d;
+      cell.appendChild(num);
+      cell.addEventListener('click', () => onDayClick(iso));
+
+      const checkinBooking = state.bookings.find(b => b.checkin === iso);
+      const checkoutBooking = state.bookings.find(b => b.checkout === iso);
+      if (checkinBooking || checkoutBooking) {
+        const turn = document.createElement('div');
+        turn.className = 'turn-indicator';
+        if (checkoutBooking) {
+          const half = document.createElement('div');
+          half.className = 'turn-bar checkout-half';
+          half.style.background = SOURCE_COLORS[checkoutBooking.source];
+          half.title = 'Check-out: ' + checkoutBooking.guest + ' — clicca per modificare';
+          half.addEventListener('click', (e) => { e.stopPropagation(); openModal(checkoutBooking.id); });
+          turn.appendChild(half);
+        }
+        if (checkinBooking) {
+          const half = document.createElement('div');
+          half.className = 'turn-bar checkin-half';
+          half.style.background = SOURCE_COLORS[checkinBooking.source];
+          half.title = 'Check-in: ' + checkinBooking.guest + ' — clicca per modificare';
+          half.addEventListener('click', (e) => { e.stopPropagation(); openModal(checkinBooking.id); });
+          turn.appendChild(half);
+        }
+        const symbol = document.createElement('div');
+        symbol.className = 'turn-symbol';
+        symbol.textContent = '✂';
+        symbol.title = (checkinBooking && checkoutBooking)
+          ? ('Cambio: check-out ' + checkoutBooking.guest + ' / check-in ' + checkinBooking.guest)
+          : (checkoutBooking ? ('Check-out: ' + checkoutBooking.guest) : ('Check-in: ' + checkinBooking.guest));
+        turn.appendChild(symbol);
+        cell.appendChild(turn);
+      }
+
+      state.bookings.forEach(b => {
+        if (iso === b.checkin) {
+          const bar = document.createElement('div');
+          bar.className = 'cal-bar';
+          bar.style.background = SOURCE_COLORS[b.source];
+          bar.textContent = '→ ' + b.guest;
+          bar.title = 'Check-in: ' + b.guest + ' (' + SOURCE_LABELS[b.source] + ')' + ' — clicca per modificare';
+          styleStayBar(bar, b, true);
+          bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
+          cell.appendChild(bar);
+        } else if (iso > b.checkin && iso < b.checkout) {
+          const bar = document.createElement('div');
+          bar.className = 'cal-bar';
+          bar.style.background = SOURCE_COLORS[b.source];
+          bar.style.opacity = '0.55';
+          bar.textContent = b.guest;
+          bar.title = b.guest + ' — clicca per modificare';
+          styleStayBar(bar, b, false);
+          bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
+          cell.appendChild(bar);
+        }
+        if (iso === b.cleaningDate) {
+          const meta = cleanStatusMeta(b.cleaningStatus || 'scheduled');
+          const bar = document.createElement('div');
+          bar.className = 'cal-bar cal-bar-clean';
+          bar.style.background = meta.color;
+          bar.style.color = meta.text;
+          bar.textContent = '▨ ' + (b.cleaningTime || '');
+          bar.appendChild(Object.assign(document.createElement('span'), { className: 'cal-bar-word', textContent: ' pulizia' }));
+          bar.title = 'Pulizia ' + b.guest + ' — ' + (b.cleaningTime || '') + ' (' + meta.shortLabel + ') — clicca per modificare';
+          bar.addEventListener('click', (e) => { e.stopPropagation(); openModal(b.id); });
+          cell.appendChild(bar);
+        }
+      });
+      state.cleanings.forEach(c => {
+        if (iso === c.date) {
+          const meta = cleanStatusMeta(c.status || 'scheduled');
+          const bar = document.createElement('div');
+          bar.className = 'cal-bar cal-bar-clean cal-bar-clean-extra';
+          bar.style.background = meta.color;
+          bar.style.color = meta.text;
+          bar.textContent = '✦ ' + (c.time || '');
+          bar.appendChild(Object.assign(document.createElement('span'), { className: 'cal-bar-word', textContent: ' extra' }));
+          bar.title = 'Pulizia extra — ' + (c.time || '') + ' (' + meta.shortLabel + ')' + (c.cost ? ' — ' + c.cost + ' ' + c.currency : '') + ' — clicca per modificare';
+          bar.addEventListener('click', (e) => { e.stopPropagation(); openCleaningModal(c.id); });
+          cell.appendChild(bar);
+        }
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  function onDayClick(iso){
+    if (!selection.start) {
+      selection.start = iso;
+      renderCalendar();
+      return;
+    }
+    if (iso === selection.start) {
+      selection.start = null;
+      renderCalendar();
+      return;
+    }
+    let start = selection.start, end = iso;
+    if (end < start) { const t = start; start = end; end = t; }
+    const checkout = addDays(end, 1); // ultima notte selezionata = end, quindi check-out il giorno dopo
+    selection.start = null;
+    renderCalendar();
+    openModal(null, { checkin: start, checkout });
+  }
+
+  // ---------- cleaning list ----------
+  let lastCleaningUndo = null; // { type: 'booking'|'extra', id, prevStatus } — un solo passo indietro
+  document.getElementById('cleaningUndoBtn').addEventListener('click', () => {
+    if (!lastCleaningUndo) return;
+    const { type, id, prevStatus } = lastCleaningUndo;
+    if (type === 'booking') {
+      const b = state.bookings.find(x => x.id === id);
+      if (b) { b.cleaningStatus = prevStatus; save(); postToBackend('saveBooking', { booking: b }); }
+    } else {
+      const c = state.cleanings.find(x => x.id === id);
+      if (c) { c.status = prevStatus; save(); postToBackend('saveCleaning', { cleaning: c }); }
+    }
+    lastCleaningUndo = null;
+    renderAll();
+  });
+  function renderCleaningList(){
+    const today = todayISO();
+    // Solo pulizie da oggi in poi e non ancora completate: una volta segnata "fatta"
+    // (o se la data è passata) sparisce da questa lista.
+    const upcoming = allCleaningEntries()
+      .filter(c => c.date >= today && c.status !== 'done')
+      .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))
+      .slice(0, 10);
+    const el = document.getElementById('cleaningList');
+    if (!upcoming.length) {
+      el.innerHTML = '<div class="empty-state">Nessuna pulizia in programma</div>';
+      return;
+    }
+    el.innerHTML = upcoming.map(c => {
+      const tagColor = c.type === 'extra' ? 'var(--clean)' : SOURCE_COLORS[c.source];
+      const tagLabel = c.type === 'extra' ? 'Extra' : SOURCE_LABELS[c.source];
+      const costStr = c.cost ? (' · ' + Number(c.cost).toLocaleString('it-IT') + ' ' + c.currency) : '';
+      const meta = cleanStatusMeta(c.status);
+      return `
+      <div class="booking-item">
+        <div class="b-left">
+          <span class="src-tag" style="background:${tagColor}">${tagLabel}</span>
+          <div class="b-info">
+            <div class="b-guest">${escapeHtml(c.label)}</div>
+            <div class="b-dates">${fmtDate(c.date)}${c.time ? ' · ore ' + c.time : ''}${costStr}</div>
+          </div>
+        </div>
+        <div class="b-actions">
+          <span class="clean-badge ${meta.badge}" data-toggle-clean="${c.type}:${c.id}" title="Clicca per cambiare stato">
+            ${meta.label}
+          </span>
+          ${c.type === 'extra' ? `<button class="btn-small" data-edit-clean="${c.id}">Modifica</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-toggle-clean]').forEach(elm => {
+      elm.addEventListener('click', () => {
+        const [type, id] = elm.getAttribute('data-toggle-clean').split(':');
+        if (type === 'booking') {
+          const b = state.bookings.find(x => x.id === id);
+          if (b) {
+            const prevStatus = b.cleaningStatus || 'scheduled';
+            b.cleaningStatus = nextCleanStatus(prevStatus);
+            lastCleaningUndo = { type: 'booking', id, prevStatus };
+            save(); renderAll(); postToBackend('saveBooking', { booking: b });
+          }
+        } else {
+          const c = state.cleanings.find(x => x.id === id);
+          if (c) {
+            const prevStatus = c.status || 'scheduled';
+            c.status = nextCleanStatus(prevStatus);
+            lastCleaningUndo = { type: 'extra', id, prevStatus };
+            save(); renderAll(); postToBackend('saveCleaning', { cleaning: c });
+          }
+        }
+      });
+    });
+    el.querySelectorAll('[data-edit-clean]').forEach(elm => {
+      elm.addEventListener('click', () => openCleaningModal(elm.getAttribute('data-edit-clean')));
+    });
+    const undoBtn = document.getElementById('cleaningUndoBtn');
+    if (undoBtn) undoBtn.style.display = lastCleaningUndo ? 'inline-block' : 'none';
+  }
+
+  // ---------- booking list ----------
+  const bookingsFilterFromEl = document.getElementById('bookingsFilterFrom');
+  const bookingsFilterToEl = document.getElementById('bookingsFilterTo');
+  function renderBookingList(){
+    let sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
+    const filterFrom = bookingsFilterFromEl.value;
+    const filterTo = bookingsFilterToEl.value;
+    const filterActive = filterFrom && filterTo && filterTo >= filterFrom;
+    if (filterActive) {
+      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom, checkout: addDays(filterTo, 1) }));
+    }
+    const el = document.getElementById('bookingList');
+    if (!sorted.length) {
+      el.innerHTML = filterActive
+        ? '<div class="empty-state">Nessuna prenotazione in questo periodo.</div>'
+        : '<div class="empty-state">Nessuna prenotazione. Aggiungine una con "+ Nuova prenotazione" o cliccando sul calendario.</div>';
+      return;
+    }
+    el.innerHTML = sorted.map(b => {
+      let priceStr = '';
+      if (b.price) {
+        const usd = toUSD(Number(b.price), b.currency);
+        priceStr = ' · ' + Number(b.price).toLocaleString('it-IT') + ' ' + b.currency;
+        if (b.currency !== 'USD') priceStr += ' (≈ ' + fmtUSD(usd) + ')';
+      }
+      return `
+      <div class="booking-item">
+        <div class="b-left">
+          <span class="src-tag" style="background:${SOURCE_COLORS[b.source]}">${SOURCE_LABELS[b.source]}</span>
+          <div class="b-info">
+            <div class="b-guest">${escapeHtml(b.guest)}</div>
+            <div class="b-dates">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${nightsBetween(b.checkin,b.checkout)} notti${priceStr}</div>
+          </div>
+        </div>
+        <div class="b-actions">
+          <button class="btn-small" data-edit="${b.id}">Modifica</button>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-edit]').forEach(elm => {
+      elm.addEventListener('click', () => openModal(elm.getAttribute('data-edit')));
+    });
+  }
+  bookingsFilterFromEl.addEventListener('change', renderBookingList);
+  bookingsFilterToEl.addEventListener('change', renderBookingList);
+  document.getElementById('bookingsFilterReset').addEventListener('click', () => {
+    bookingsFilterFromEl.value = '';
+    bookingsFilterToEl.value = '';
+    renderBookingList();
+  });
+  // Comprimi/espandi la lista "Tutte le prenotazioni" (utile soprattutto da mobile
+  // con tante prenotazioni salvate).
+  document.getElementById('bookingsToggleBtn').addEventListener('click', () => {
+    const body = document.getElementById('bookingsBody');
+    const btn = document.getElementById('bookingsToggleBtn');
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? '' : 'none';
+    btn.textContent = collapsed ? 'Comprimi ▾' : 'Espandi ▸';
+    btn.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
+  });
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderAll(){
+    renderUsdBanner();
+    renderStats();
+    renderCalendar();
+    renderCleaningList();
+    renderBookingList();
+    renderPeriodStats();
+  }
+
+  // ---------- month nav ----------
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    viewDate.setMonth(viewDate.getMonth()-1);
+    // Nota: non azzeriamo selection.start qui, così se hai già scelto la data di
+    // arrivo e cambi mese per scegliere la partenza, la selezione non si perde.
+    syncPeriodToViewMonth();
+    renderAll();
+  });
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    viewDate.setMonth(viewDate.getMonth()+1);
+    syncPeriodToViewMonth();
+    renderAll();
+  });
+  // Scorciatoia in più: torna al mese corrente (stesso effetto di scorrere con Prec/Succ).
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    const now = new Date();
+    viewDate.setFullYear(now.getFullYear(), now.getMonth(), 1);
+    syncPeriodToViewMonth();
+    renderAll();
+  });
+
+  // ---------- blocco scroll di sfondo (stabilità su iPhone) ----------
+  let savedScrollY = 0;
+  let openOverlaysCount = 0;
+  function lockBodyScroll(){
+    if (openOverlaysCount === 0) {
+      savedScrollY = window.scrollY || window.pageYOffset || 0;
+      document.body.style.top = '-' + savedScrollY + 'px';
+      document.body.classList.add('modal-open');
+    }
+    openOverlaysCount++;
+  }
+  function unlockBodyScroll(){
+    openOverlaysCount = Math.max(0, openOverlaysCount - 1);
+    if (openOverlaysCount === 0) {
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      window.scrollTo(0, savedScrollY);
+    }
+  }
+
+  // ---------- modal ----------
+  const overlay = document.getElementById('overlay');
+  const form = document.getElementById('bookingForm');
+  const warnBox = document.getElementById('warnBox');
+  const checkinEl = document.getElementById('checkin');
+  const checkoutEl = document.getElementById('checkout');
+  const cleaningDateEl = document.getElementById('cleaningDate');
+
+  checkoutEl.addEventListener('change', () => {
+    if (cleaningDateEl.dataset.auto !== 'false' || !cleaningDateEl.value) {
+      cleaningDateEl.value = checkoutEl.value;
+      cleaningDateEl.dataset.auto = 'true';
+    }
+  });
+  cleaningDateEl.addEventListener('input', () => { cleaningDateEl.dataset.auto = 'false'; });
+  // Aiuti di compilazione: numero di notti sempre visibile; se sposti il check-in oltre il
+  // check-out, il check-out si porta al giorno dopo (e la pulizia lo segue come sempre).
+  const nightsHintEl = document.getElementById('nightsHint');
+  function updateNightsHint(){
+    const ci = checkinEl.value, co = checkoutEl.value;
+    const n = (ci && co) ? nightsBetween(ci, co) : 0;
+    nightsHintEl.textContent = n > 0 ? (n + (n === 1 ? ' notte' : ' notti')) : '';
+  }
+  checkinEl.addEventListener('change', () => {
+    if (checkinEl.value && checkoutEl.value && checkoutEl.value <= checkinEl.value) {
+      checkoutEl.value = addDays(checkinEl.value, 1);
+      checkoutEl.dispatchEvent(new Event('change'));
+    }
+    updateNightsHint();
+  });
+  checkoutEl.addEventListener('change', updateNightsHint);
+  const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
+    else if (overlay.classList.contains('open')) closeModal();
+  });
+
+  function openModal(id, prefill){
+    form.reset();
+    cleaningDateEl.dataset.auto = 'true';
+    warnBox.classList.remove('show');
+    document.getElementById('deleteBtn').style.display = id ? 'inline-block' : 'none';
+    if (id) {
+      const b = state.bookings.find(x => x.id === id);
+      document.getElementById('modalTitle').textContent = 'Modifica prenotazione';
+      document.getElementById('bookingId').value = b.id;
+      document.getElementById('guest').value = b.guest;
+      document.getElementById('source').value = b.source;
+      document.getElementById('guestsCount').value = b.guestsCount || 2;
+      checkinEl.value = b.checkin;
+      checkoutEl.value = b.checkout;
+      document.getElementById('price').value = b.price || '';
+      document.getElementById('currency').value = b.currency || 'THB';
+      document.getElementById('notes').value = b.notes || '';
+      cleaningDateEl.value = b.cleaningDate || b.checkout;
+      cleaningDateEl.dataset.auto = (b.cleaningDate === b.checkout) ? 'true' : 'false';
+      document.getElementById('cleaningTime').value = b.cleaningTime || '11:00';
+      document.getElementById('cleaningCost').value = b.cleaningCost || '';
+      document.getElementById('cleaningCostCurrency').value = b.cleaningCostCurrency || 'THB';
+      document.getElementById('cleaningStatus').value = b.cleaningStatus || 'scheduled';
+    } else {
+      document.getElementById('modalTitle').textContent = 'Nuova prenotazione';
+      document.getElementById('bookingId').value = '';
+      document.getElementById('currency').value = 'THB';
+      document.getElementById('cleaningTime').value = '11:00';
+      document.getElementById('cleaningStatus').value = 'scheduled';
+      document.getElementById('cleaningCostCurrency').value = 'THB';
+      const ci = (prefill && prefill.checkin) ? prefill.checkin : todayISO();
+      const co = (prefill && prefill.checkout) ? prefill.checkout : addDays(ci,2);
+      checkinEl.value = ci;
+      checkoutEl.value = co;
+      cleaningDateEl.value = co;
+    }
+    overlay.classList.add('open');
+    lockBodyScroll();
+    updateNightsHint();
+    overlay.querySelector('.modal').scrollTop = 0;
+    // al computer il cursore parte già nel nome dell'ospite (sul telefono no: aprirebbe la tastiera)
+    if (!id && finePointer) document.getElementById('guest').focus();
+  }
+  function closeModal(){ overlay.classList.remove('open'); unlockBodyScroll(); }
+
+  document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    const id = document.getElementById('bookingId').value;
+    if (id && confirm('Eliminare questa prenotazione?')) {
+      state.bookings = state.bookings.filter(b => b.id !== id);
+      save();
+      postToBackend('deleteBooking', { id });
+      renderAll();
+      closeModal();
+    }
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('bookingId').value || uid();
+    const existingForSync = state.bookings.find(b => b.id === id);
+    const checkin = checkinEl.value;
+    const checkout = checkoutEl.value;
+    if (checkout <= checkin) {
+      warnBox.textContent = 'La data di check-out deve essere successiva al check-in.';
+      warnBox.classList.add('show');
+      overlay.querySelector('.modal').scrollTop = 0; // l'avviso è in cima al modulo: portalo in vista
+      return;
+    }
+    const candidate = { id, checkin, checkout };
+    const conflict = state.bookings.find(b => b.id !== id && overlaps(b, candidate));
+    if (conflict) {
+      warnBox.textContent = `Attenzione: sovrapposizione con la prenotazione di ${conflict.guest} (${fmtDate(conflict.checkin)} → ${fmtDate(conflict.checkout)}, ${SOURCE_LABELS[conflict.source]}). Controlla per evitare un doppio booking.`;
+      warnBox.classList.add('show');
+      overlay.querySelector('.modal').scrollTop = 0; // l'avviso è in cima al modulo: portalo in vista
+      return;
+    }
+    const existingIdx = state.bookings.findIndex(b => b.id === id);
+    const booking = {
+      id, checkin, checkout,
+      guest: document.getElementById('guest').value.trim(),
+      source: document.getElementById('source').value,
+      guestsCount: Number(document.getElementById('guestsCount').value) || null,
+      price: document.getElementById('price').value ? Number(document.getElementById('price').value) : null,
+      currency: document.getElementById('currency').value,
+      notes: document.getElementById('notes').value.trim(),
+      cleaningDate: cleaningDateEl.value || checkout,
+      cleaningTime: document.getElementById('cleaningTime').value || '11:00',
+      cleaningCost: document.getElementById('cleaningCost').value ? Number(document.getElementById('cleaningCost').value) : null,
+      cleaningCostCurrency: document.getElementById('cleaningCostCurrency').value,
+      cleaningStatus: document.getElementById('cleaningStatus').value,
+      syncSource: existingForSync ? (existingForSync.syncSource || '') : '',
+    };
+    if (existingIdx >= 0) state.bookings[existingIdx] = booking;
+    else state.bookings.push(booking);
+    save();
+    postToBackend('saveBooking', { booking });
+    renderAll();
+    closeModal();
+  });
+
+  // ---------- modal pulizia extra ----------
+  const cleaningOverlay = document.getElementById('cleaningOverlay');
+  const cleaningForm = document.getElementById('cleaningForm');
+
+  function openCleaningModal(id){
+    cleaningForm.reset();
+    document.getElementById('deleteCleaningBtn').style.display = id ? 'inline-block' : 'none';
+    if (id) {
+      const c = state.cleanings.find(x => x.id === id);
+      document.getElementById('cleaningModalTitle').textContent = 'Modifica pulizia extra';
+      document.getElementById('cleaningId').value = c.id;
+      document.getElementById('extraCleaningDate').value = c.date;
+      document.getElementById('extraCleaningTime').value = c.time || '11:00';
+      document.getElementById('extraCleaningCost').value = c.cost || '';
+      document.getElementById('extraCleaningCurrency').value = c.currency || 'THB';
+      document.getElementById('extraCleaningNotes').value = c.notes || '';
+      document.getElementById('extraCleaningStatus').value = c.status || 'scheduled';
+    } else {
+      document.getElementById('cleaningModalTitle').textContent = 'Pulizia extra';
+      document.getElementById('cleaningId').value = '';
+      document.getElementById('extraCleaningDate').value = todayISO();
+      document.getElementById('extraCleaningTime').value = '11:00';
+      document.getElementById('extraCleaningCurrency').value = 'THB';
+      document.getElementById('extraCleaningStatus').value = 'scheduled';
+    }
+    cleaningOverlay.classList.add('open');
+    lockBodyScroll();
+  }
+  function closeCleaningModal(){ cleaningOverlay.classList.remove('open'); unlockBodyScroll(); }
+
+  document.getElementById('addCleaningBtn').addEventListener('click', () => openCleaningModal(null));
+  document.getElementById('cancelCleaningBtn').addEventListener('click', closeCleaningModal);
+  cleaningOverlay.addEventListener('click', (e) => { if (e.target === cleaningOverlay) closeCleaningModal(); });
+
+  document.getElementById('deleteCleaningBtn').addEventListener('click', () => {
+    const id = document.getElementById('cleaningId').value;
+    if (id && confirm('Eliminare questa pulizia extra?')) {
+      state.cleanings = state.cleanings.filter(c => c.id !== id);
+      save();
+      postToBackend('deleteCleaning', { id });
+      renderAll();
+      closeCleaningModal();
+    }
+  });
+
+  cleaningForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('cleaningId').value || uid();
+    const existingIdx = state.cleanings.findIndex(c => c.id === id);
+    const cleaning = {
+      id,
+      date: document.getElementById('extraCleaningDate').value,
+      time: document.getElementById('extraCleaningTime').value || '11:00',
+      cost: document.getElementById('extraCleaningCost').value ? Number(document.getElementById('extraCleaningCost').value) : null,
+      currency: document.getElementById('extraCleaningCurrency').value,
+      notes: document.getElementById('extraCleaningNotes').value.trim(),
+      status: document.getElementById('extraCleaningStatus').value,
+    };
+    if (existingIdx >= 0) state.cleanings[existingIdx] = cleaning;
+    else state.cleanings.push(cleaning);
+    save();
+    postToBackend('saveCleaning', { cleaning });
+    renderAll();
+    closeCleaningModal();
+  });
+
+  // ---------- export / import ----------
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup-prenotazioni-' + todayISO() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (data && Array.isArray(data.bookings)) {
+          if (!data.rates) data.rates = { ...DEFAULT_RATES };
+          data.rates.USD = 1;
+          if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
+          if (data.ratesManualOverride == null) data.ratesManualOverride = false;
+          if (!data.cleanings) data.cleanings = [];
+          data.bookings.forEach(b => {
+            if (!b.currency) b.currency = 'THB';
+            if (!b.cleaningDate) b.cleaningDate = b.checkout;
+            if (!b.cleaningTime) b.cleaningTime = '11:00';
+            if (b.cleaningCost === undefined) b.cleaningCost = null;
+            if (!b.cleaningCostCurrency) b.cleaningCostCurrency = 'THB';
+            if (!b.cleaningStatus) b.cleaningStatus = b.cleaningDone ? 'done' : 'scheduled';
+          });
+          data.cleanings.forEach(c => {
+            if (!c.status) c.status = c.done ? 'done' : 'scheduled';
+          });
+          state = data;
+          save();
+          propertyNameEl.value = state.propertyName || 'Esrah Garden Home Villa';
+          renderAll();
+          if (backendEnabled()) {
+            postToBackend('bulkReplace', { state });
+            alert('Backup importato correttamente e inviato al server condiviso.');
+          } else {
+            alert('Backup importato correttamente.');
+          }
+        } else {
+          alert('File non valido.');
+        }
+      } catch(err) {
+        alert('Errore nella lettura del file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ---------- attivazione del dispositivo (una sola volta) ----------
+  const activationEl = document.getElementById('activation');
+  const activationInput = document.getElementById('activationCode');
+  const activationMsg = document.getElementById('activationMsg');
+  const activationBtn = document.getElementById('activationBtn');
+  function normalizeCode(v){ return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+  function b64ToBytes(b64){ return Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)); }
+  async function decryptBackendUrl(code){
+    const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+    const aes = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: b64ToBytes(ENC_BACKEND.s), iterations: 150000, hash: 'SHA-256' },
+      material, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(ENC_BACKEND.i) }, aes, b64ToBytes(ENC_BACKEND.c));
+    return new TextDecoder().decode(plain);
+  }
+  function showActivation(){ activationEl.classList.add('open'); }
+  // Chiamata quando il backend rifiuta il codice salvato (es. codice sostituito): si richiede di nuovo.
+  function requireActivation(){
+    WEBAPP_URL = ''; ACCESS_KEY = '';
+    try { localStorage.removeItem(ACCESS_STORE); } catch(e) {}
+    showActivation();
+  }
+  async function tryActivate(){
+    const code = normalizeCode(activationInput.value);
+    if (code.length < 16) { activationMsg.textContent = 'Codice incompleto.'; return; }
+    activationBtn.disabled = true;
+    activationMsg.textContent = 'Controllo…';
+    let url;
+    try { url = await decryptBackendUrl(code); }
+    catch(e) { activationMsg.textContent = 'Codice non valido.'; activationBtn.disabled = false; return; }
+    try {
+      WEBAPP_URL = url; ACCESS_KEY = code;
+      const data = await callBackend('data');
+      if (!data || !Array.isArray(data.bookings)) throw new Error('risposta non valida');
+      localStorage.setItem(ACCESS_STORE, JSON.stringify({ u: url, k: code }));
+      activationInput.value = '';
+      activationMsg.textContent = '';
+      activationEl.classList.remove('open');
+      startBackendSync();
+    } catch(e) {
+      WEBAPP_URL = ''; ACCESS_KEY = '';
+      activationMsg.textContent = 'Connessione non riuscita: controlla internet e riprova.';
+    }
+    activationBtn.disabled = false;
+  }
+  activationBtn.addEventListener('click', tryActivate);
+  activationInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryActivate(); });
+
+  // Avviso discreto solo se il backup automatico del foglio è fermo da più di 3 giorni.
+  function renderBackupWarning(){
+    const el = document.getElementById('backupWarning');
+    if (!el) return;
+    const last = state.lastBackup ? new Date(state.lastBackup).getTime() : 0;
+    const stale = backendEnabled() && state.lastBackup !== undefined && (!last || (Date.now() - last) > 3 * 86400000);
+    el.style.display = stale ? 'block' : 'none';
+  }
+
+  let syncTimer = null;
+  function startBackendSync(){
+    refreshFromBackend();
+    if (!syncTimer) syncTimer = setInterval(() => { if (backendEnabled()) refreshFromBackend(); }, 5 * 60 * 1000);
+  }
+
+  renderAll();
+  // Dispositivo attivato: carica subito i dati più recenti (utili anche dagli altri
+  // dispositivi/dalla sync Airbnb/Booking) e poi ricontrolla ogni 5 minuti mentre la
+  // pagina resta aperta. Non attivato: mostra la richiesta del codice (una volta sola).
+  if (backendEnabled()) startBackendSync();
+  else showActivation();
+})();
+</script>
+</body>
+</html>
