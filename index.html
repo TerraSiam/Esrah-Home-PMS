@@ -513,6 +513,28 @@
     .filter-search input { font-size: 16px; min-height: 44px; }
     .cal-pick button { flex: 1 1 100%; }
   }
+  /* ---------- Giro 2: numeri (ricavi netti, costi, costi extra) ---------- */
+  .rates-toggle-row { justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rates-toggle-row .net-note { flex: 1 1 220px; }
+  .field-hint { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin: -6px 0 12px; }
+  .period-costs { margin-top: 10px; }
+  .period-costs:empty { display: none; }
+  .period-costs .stat-card { background: #FCFBF8; }
+  .stat-card.result-pos .stat-value { color: var(--brand-dark); }
+  .stat-card.result-neg .stat-value { color: #B91C1C; }
+  .card .net-note { margin: 12px 0 0; }
+  .layout-extra { margin-top: 0; }
+  .layout-extra:has(#extraColumn:empty) { grid-template-columns: 1fr; }
+  .period-inputs select { min-width: 170px; background: #fff; }
+  .cost-auto { font-size: 11px; font-weight: 700; color: var(--muted); padding: 0 6px; white-space: nowrap; }
+  #costList { margin-top: 14px; }
+  @media (max-width: 560px) {
+    #costList.scroll-box { max-height: 52vh; max-height: 52dvh; }
+    .period-inputs select { min-width: 0; width: 100%; }
+    .period-inputs .field { flex: 1 1 130px; }
+    .period-inputs .field.field-wide { flex: 1 1 100%; }
+    .card-header-row .btn-primary { min-height: 40px; }
+  }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
   .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
@@ -581,6 +603,7 @@
     </div>
   </div>
   <div class="rates-toggle-row">
+    <span class="net-note" id="netNote">Ricavi al netto di commissioni e costi delle OTA (Airbnb, Booking.com): sono gli importi che incassi.</span>
     <button id="toggleRates">Tassi di cambio ▾</button>
   </div>
   <div class="rates-panel" id="ratesPanel">
@@ -646,6 +669,8 @@
           </div>
         </div>
         <div class="period-results" id="periodResults"></div>
+        <div class="period-results period-costs" id="periodCosts"></div>
+        <p class="net-note">Ricavi al netto di commissioni e costi delle OTA (Airbnb, Booking.com). Costi totali = pulizie + costi extra (compreso il fisso mensile). Risultato netto = ricavi − costi totali.</p>
       </div>
     </div>
 
@@ -664,6 +689,7 @@
           <button class="btn-small" type="button" id="bookingsToggleBtn" aria-expanded="true">Comprimi ▾</button>
         </div>
         <div id="bookingsBody">
+          <p class="hint">Gli importi sono al netto di commissioni e costi delle OTA.</p>
           <div class="period-inputs" style="margin-bottom:12px;">
             <div class="field">
               <label>Dal</label>
@@ -695,6 +721,35 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="layout layout-extra">
+    <div>
+      <div class="card" id="costsSection">
+        <div class="card-header-row">
+          <h2>Costi extra</h2>
+          <button class="btn-small btn-primary" type="button" id="addCostBtn">+ Costo extra</button>
+        </div>
+        <p class="hint">Lavanderia, acqua delle cisterne, manutenzioni varie. Il costo fisso di giardino e piscina si aggiunge da solo il primo di ogni mese.</p>
+        <div class="period-inputs">
+          <div class="field field-wide">
+            <label>Periodo</label>
+            <select id="costsPreset" aria-label="Periodo dei costi extra"></select>
+          </div>
+          <div class="field">
+            <label>Dal</label>
+            <input type="date" id="costsFrom" />
+          </div>
+          <div class="field">
+            <label>Al</label>
+            <input type="date" id="costsTo" />
+          </div>
+        </div>
+        <div class="period-results" id="costsTotals"></div>
+        <div id="costList" class="scroll-box"></div>
+      </div>
+    </div>
+    <div id="extraColumn"></div>
   </div>
 
   <div class="footer-note"><span id="syncNote">Dati sincronizzati con il foglio condiviso.</span> Usa "Esporta backup" per conservare una copia in più.</div>
@@ -750,6 +805,7 @@
           </select>
         </div>
       </div>
+      <div class="field-hint">Importo netto: quello che incassi, già tolte commissioni e costi di Airbnb/Booking.</div>
       <div class="field">
         <label>Note (opzionale)</label>
         <textarea id="notes" rows="2" placeholder="es. arrivo tardi, richiesta culla..."></textarea>
@@ -849,6 +905,53 @@
   </div>
 </div>
 
+<div class="overlay" id="costOverlay">
+  <div class="modal">
+    <h3 id="costModalTitle">Costo extra</h3>
+    <form id="costForm">
+      <input type="hidden" id="costId" />
+      <div class="field-row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="costDate" required />
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="costCategory">
+            <option value="lavanderia">Lavanderia</option>
+            <option value="acqua">Acqua cisterne (refill)</option>
+            <option value="manutenzione">Manutenzione</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Importo</label>
+          <input type="number" id="costAmount" min="0.01" step="0.01" required placeholder="es. 800" inputmode="decimal" />
+        </div>
+        <div class="field narrow">
+          <label>Valuta</label>
+          <select id="costCurrency">
+            <option value="THB">THB</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nota (opzionale)</label>
+        <textarea id="costNotes" rows="2" placeholder="es. refill 2 cisterne, riparazione pompa..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="deleteCostBtn" class="btn-danger" style="display:none;margin-right:auto;">Elimina</button>
+        <button type="button" id="cancelCostBtn">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="backupWarning" style="display:none; margin:16px auto; max-width:720px; padding:10px 14px; border:1px solid #F59E0B; border-radius:10px; background:#FFFBEB; color:#92400E; font-size:13px;">
   Il backup automatico del foglio non gira da più di 3 giorni: fai «Esporta backup» e avvisa chi segue il PMS.
 </div>
@@ -923,6 +1026,7 @@
     }
     if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
     if (!data.cleanings) data.cleanings = [];
+    if (!Array.isArray(data.costs)) data.costs = [];
     // migrate old bookings without currency/cleaning fields
     (data.bookings || []).forEach(b => {
       if (!b.currency) b.currency = 'THB';
@@ -977,6 +1081,9 @@
       if (!data.rates) data.rates = { ...DEFAULT_RATES };
       data.rates.USD = 1;
       if (!data.cleanings) data.cleanings = [];
+      // costi extra: se il server non li manda (versione vecchia) restano quelli di questo dispositivo
+      if (!Array.isArray(data.costs)) data.costs = state.costs || [];
+      if (!Array.isArray(data.fixedCosts) && state.fixedCosts) data.fixedCosts = state.fixedCosts;
       data.bookings.forEach(b => {
         if (!b.currency) b.currency = 'THB';
         if (!b.cleaningTime) b.cleaningTime = '11:00';
@@ -1106,6 +1213,172 @@
     });
     return { totalUSD, count };
   }
+
+  // ---------- costi extra ----------
+  // Costo fisso di ogni mese: arriva dal backend (si cambia nella scheda Config); questo è il valore di riserva.
+  const DEFAULT_FIXED_COSTS = [{ id: 'fisso_giardino_piscina', label: 'Manutenzione giardino e piscina', amount: 1500, currency: 'THB', from: '2026-01' }];
+  const COST_CATEGORIES = {
+    lavanderia: { label: 'Lavanderia', color: '#0891B2' },
+    acqua: { label: 'Acqua cisterne', color: '#2563EB' },
+    manutenzione: { label: 'Manutenzione', color: '#B45309' },
+    altro: { label: 'Altro', color: 'var(--altro)' },
+    fisso: { label: 'Fisso mensile', color: 'var(--brand)' },
+  };
+  function fixedCostList(){
+    return (Array.isArray(state.fixedCosts) && state.fixedCosts.length) ? state.fixedCosts : DEFAULT_FIXED_COSTS;
+  }
+  // Voci di costo extra nell'intervallo [rangeStart, rangeEndExclusive): quelle inserite a mano
+  // più il fisso mensile, che vale come una voce datata il primo giorno di ogni mese.
+  function costEntriesForRange(rangeStart, rangeEndExclusive){
+    const out = (state.costs || [])
+      .filter(c => c.date >= rangeStart && c.date < rangeEndExclusive && c.amount)
+      .map(c => ({ id: c.id, date: c.date, category: COST_CATEGORIES[c.category] ? c.category : 'altro', amount: Number(c.amount), currency: c.currency || 'THB', notes: c.notes || '', fixed: false }));
+    const y0 = Number(rangeStart.slice(0, 4)), m0 = Number(rangeStart.slice(5, 7)) - 1;
+    fixedCostList().forEach(f => {
+      if (!f || !(Number(f.amount) > 0)) return;
+      for (let i = 0; i < 1200; i++) {
+        const first = isoFromYMD(y0, m0 + i, 1);
+        if (first >= rangeEndExclusive) break;
+        if (first < rangeStart || first.slice(0, 7) < (f.from || '0000-00')) continue;
+        out.push({ id: f.id + '_' + first.slice(0, 7), date: first, category: 'fisso', amount: Number(f.amount), currency: f.currency || 'THB', notes: f.label || 'Costo fisso mensile', fixed: true });
+      }
+    });
+    return out.sort((a, b) => (b.date + (b.fixed ? '0' : '1')).localeCompare(a.date + (a.fixed ? '0' : '1')));
+  }
+  function computeExtraCostForRange(rangeStart, rangeEndExclusive){
+    let totalUSD = 0, fixedUSD = 0, count = 0;
+    costEntriesForRange(rangeStart, rangeEndExclusive).forEach(c => {
+      const usd = toUSD(c.amount, c.currency);
+      totalUSD += usd; count++;
+      if (c.fixed) fixedUSD += usd;
+    });
+    return { totalUSD, fixedUSD, count };
+  }
+  // Tutti i numeri di un periodo in un colpo solo (usati da metriche, costi extra ed esportazione).
+  function computeAllForRange(rangeStart, rangeEndExclusive){
+    const stats = computeStatsForRange(rangeStart, rangeEndExclusive);
+    const cleaning = computeCleaningCostForRange(rangeStart, rangeEndExclusive);
+    const extra = computeExtraCostForRange(rangeStart, rangeEndExclusive);
+    const costsUSD = cleaning.totalUSD + extra.totalUSD;
+    return { stats, cleaning, extra, costsUSD, netUSD: stats.revenueUSD - costsUSD };
+  }
+  function usdWithThb(usd){
+    return fmtUSD(usd) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(usd)) + '</span>';
+  }
+  function statCardsHtml(cards){
+    return cards.map(c => `
+      <div class="stat-card${c.cls ? ' ' + c.cls : ''}">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('');
+  }
+  // Scelta del periodo: un elenco con anni e mesi, più due date libere. Scegliendo un mese le
+  // date si riempiono da sole; cambiando una data l'elenco passa a «Tra due date».
+  function setupPeriodPicker(presetId, fromId, toId, defaultValue, onChange){
+    const sel = document.getElementById(presetId), fromEl = document.getElementById(fromId), toEl = document.getElementById(toId);
+    function rangeOf(v){
+      if (v.charAt(0) === 'y') { const y = Number(v.slice(2)); return [isoFromYMD(y, 0, 1), isoFromYMD(y, 11, 31)]; }
+      if (v.charAt(0) === 'm') { const y = Number(v.slice(2, 6)), m = Number(v.slice(7, 9)) - 1; return [isoFromYMD(y, m, 1), isoFromYMD(y, m + 1, 0)]; }
+      return null;
+    }
+    function fill(){
+      const today = todayISO();
+      const curY = Number(today.slice(0, 4)), curM = Number(today.slice(5, 7)) - 1;
+      let firstYM = today.slice(0, 7);
+      state.bookings.forEach(b => { if (b.checkin && b.checkin.slice(0, 7) < firstYM) firstYM = b.checkin.slice(0, 7); });
+      (state.costs || []).forEach(c => { if (c.date && c.date.slice(0, 7) < firstYM) firstYM = c.date.slice(0, 7); });
+      fixedCostList().forEach(f => { if (f.from && f.from < firstYM) firstYM = f.from; });
+      const firstY = Number(firstYM.slice(0, 4));
+      const keep = sel.value;
+      let html = '<option value="custom">Tra due date</option><optgroup label="Anni">';
+      for (let y = curY + 1; y >= firstY; y--) html += '<option value="y:' + y + '">Anno ' + y + '</option>';
+      html += '</optgroup><optgroup label="Mesi">';
+      for (let i = 12; i > -1200; i--) {
+        const ym = isoFromYMD(curY, curM + i, 1).slice(0, 7);
+        if (ym < firstYM) break;
+        html += '<option value="m:' + ym + '">' + MONTHS[Number(ym.slice(5, 7)) - 1] + ' ' + ym.slice(0, 4) + (i === 0 ? ' (questo mese)' : '') + '</option>';
+      }
+      sel.innerHTML = html + '</optgroup>';
+      if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
+      else matchPreset();
+    }
+    function matchPreset(){
+      let found = 'custom';
+      Array.prototype.forEach.call(sel.options, o => {
+        const r = rangeOf(o.value);
+        if (found === 'custom' && r && r[0] === fromEl.value && r[1] === toEl.value) found = o.value;
+      });
+      sel.value = found;
+    }
+    sel.addEventListener('change', () => {
+      const r = rangeOf(sel.value);
+      if (r) { fromEl.value = r[0]; toEl.value = r[1]; }
+      onChange();
+    });
+    [fromEl, toEl].forEach(el => el.addEventListener('change', () => { matchPreset(); onChange(); }));
+    const today = todayISO();
+    const def = rangeOf(defaultValue === 'year' ? 'y:' + today.slice(0, 4) : 'm:' + today.slice(0, 7));
+    fromEl.value = def[0]; toEl.value = def[1];
+    fill();
+    return {
+      refresh: fill,
+      range(){ const from = fromEl.value, to = toEl.value; return { from, to, valid: !!from && !!to && to >= from }; },
+    };
+  }
+  let lastCostsPeriodKey = '';
+  function renderCosts(){
+    costsPicker.refresh();
+    const r = costsPicker.range();
+    const totalsEl = document.getElementById('costsTotals');
+    const listEl = document.getElementById('costList');
+    if (!r.valid) {
+      totalsEl.innerHTML = '';
+      listEl.classList.add('no-scroll');
+      listEl.innerHTML = '<div class="empty-state">Seleziona un intervallo di date valido.</div>';
+      return;
+    }
+    const end = addDays(r.to, 1);
+    const all = computeAllForRange(r.from, end);
+    const entries = costEntriesForRange(r.from, end);
+    const manual = entries.filter(c => !c.fixed).length;
+    totalsEl.innerHTML = statCardsHtml([
+      { label: 'Totale costi extra', value: usdWithThb(all.extra.totalUSD), sub: manual + (manual === 1 ? ' voce inserita' : ' voci inserite') + (entries.length > manual ? ' + fisso mensile' : '') },
+      { label: 'di cui fisso mensile', value: usdWithThb(all.extra.fixedUSD), sub: 'giardino e piscina · ' + (entries.length - manual) + (entries.length - manual === 1 ? ' mese' : ' mesi') },
+      { label: 'Pulizie nel periodo', value: usdWithThb(all.cleaning.totalUSD), sub: all.cleaning.count + ' pulizie con costo inserito' },
+      { label: 'Totale costi', value: usdWithThb(all.costsUSD), sub: 'pulizie + costi extra' },
+    ]);
+    const key = r.from + '|' + r.to;
+    if (key !== lastCostsPeriodKey) { listEl.scrollTop = 0; lastCostsPeriodKey = key; }
+    listEl.classList.toggle('no-scroll', entries.length <= 4);
+    if (!entries.length) {
+      listEl.innerHTML = '<div class="empty-state">Nessun costo extra in questo periodo. Aggiungine uno con "+ Costo extra".</div>';
+      return;
+    }
+    listEl.innerHTML = entries.map(c => {
+      const cat = COST_CATEGORIES[c.category];
+      let amountStr = Number(c.amount).toLocaleString('it-IT') + ' ' + c.currency;
+      if (c.currency !== 'USD') amountStr += ' (≈ ' + fmtUSD(toUSD(c.amount, c.currency)) + ')';
+      const title = c.fixed ? (c.notes + ' · ' + MONTHS[Number(c.date.slice(5, 7)) - 1].toLowerCase() + ' ' + c.date.slice(0, 4)) : (c.notes || cat.label);
+      return `
+      <div class="booking-item">
+        <div class="b-left">
+          <span class="src-tag" style="background:${cat.color}">${cat.label}</span>
+          <div class="b-info">
+            <div class="b-guest">${escapeHtml(title)}</div>
+            <div class="b-dates">${fmtDate(c.date)} · ${amountStr}</div>
+          </div>
+        </div>
+        <div class="b-actions">
+          ${c.fixed ? '<span class="cost-auto">automatico</span>' : `<button class="btn-small" data-edit-cost="${escapeHtml(c.id)}">Modifica</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-edit-cost]').forEach(elm => {
+      elm.addEventListener('click', () => openCostModal(elm.getAttribute('data-edit-cost')));
+    });
+  }
+  const costsPicker = setupPeriodPicker('costsPreset', 'costsFrom', 'costsTo', 'month', () => renderCosts());
 
   // ---------- property name ----------
   const propertyNameEl = document.getElementById('propertyName');
@@ -1250,15 +1523,24 @@
     const from = periodFromEl.value;
     const to = periodToEl.value;
     const el = document.getElementById('periodResults');
+    const costsEl = document.getElementById('periodCosts');
     if (!from || !to || to < from) {
       el.innerHTML = '<div class="empty-state">Seleziona un intervallo di date valido.</div>';
+      costsEl.innerHTML = '';
       return;
     }
-    const stats = computeStatsForRange(from, addDays(to,1));
+    const all = computeAllForRange(from, addDays(to,1));
+    costsEl.innerHTML = statCardsHtml([
+      { label: 'Costo pulizie', value: usdWithThb(all.cleaning.totalUSD), sub: all.cleaning.count + ' pulizie con costo inserito' },
+      { label: 'Costi extra', value: usdWithThb(all.extra.totalUSD), sub: all.extra.fixedUSD > 0 ? ('di cui fisso ' + fmtUSD(all.extra.fixedUSD)) : (all.extra.count + ' voci') },
+      { label: 'Costi totali', value: usdWithThb(all.costsUSD), sub: 'pulizie + costi extra' },
+      { label: 'Risultato netto', value: usdWithThb(all.netUSD), sub: 'ricavi netti − costi totali', cls: all.netUSD < 0 ? 'result-neg' : 'result-pos' },
+    ]);
+    const stats = all.stats;
     const cards = [
       { label: 'Notti nel periodo', value: stats.totalNights, sub: fmtDate(from) + ' → ' + fmtDate(to) },
       { label: 'Notti occupate', value: stats.occupiedNights, sub: stats.occPct + '% occupazione' },
-      { label: 'Ricavi', value: fmtUSD(stats.revenueUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(stats.revenueUSD)) + '</span>', sub: 'convertiti automaticamente' },
+      { label: 'Ricavi', value: fmtUSD(stats.revenueUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(stats.revenueUSD)) + '</span>', sub: 'netti OTA · convertiti in USD' },
       { label: 'ADR (USD)', value: stats.adr != null ? fmtUSD(stats.adr) : '—', sub: 'tariffa media/notte' },
       { label: 'RevPAR (USD)', value: stats.revpar != null ? fmtUSD(stats.revpar) : '—', sub: 'ricavo per notte disponibile' },
     ];
@@ -1655,6 +1937,7 @@
     renderCleaningList();
     renderBookingList();
     renderPeriodStats();
+    renderCosts();
   }
 
   // ---------- month nav ----------
@@ -1754,7 +2037,8 @@
   const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
+    if (costOverlay.classList.contains('open')) closeCostModal();
+    else if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
     else if (overlay.classList.contains('open')) closeModal();
   });
 
@@ -1930,6 +2214,69 @@
     closeCleaningModal();
   });
 
+  // ---------- modal costo extra ----------
+  const costOverlay = document.getElementById('costOverlay');
+  const costForm = document.getElementById('costForm');
+  function openCostModal(id){
+    costForm.reset();
+    document.getElementById('deleteCostBtn').style.display = id ? 'inline-block' : 'none';
+    const c = id ? (state.costs || []).find(x => x.id === id) : null;
+    if (c) {
+      document.getElementById('costModalTitle').textContent = 'Modifica costo extra';
+      document.getElementById('costId').value = c.id;
+      document.getElementById('costDate').value = c.date;
+      document.getElementById('costCategory').value = COST_CATEGORIES[c.category] && c.category !== 'fisso' ? c.category : 'altro';
+      document.getElementById('costAmount').value = c.amount || '';
+      document.getElementById('costCurrency').value = c.currency || 'THB';
+      document.getElementById('costNotes').value = c.notes || '';
+    } else {
+      document.getElementById('costModalTitle').textContent = 'Costo extra';
+      document.getElementById('costId').value = '';
+      document.getElementById('costDate').value = todayISO();
+      document.getElementById('costCategory').value = 'lavanderia';
+      document.getElementById('costCurrency').value = 'THB';
+    }
+    costOverlay.classList.add('open');
+    lockBodyScroll();
+    costOverlay.querySelector('.modal').scrollTop = 0;
+    if (!c && finePointer) document.getElementById('costAmount').focus();
+  }
+  function closeCostModal(){ costOverlay.classList.remove('open'); unlockBodyScroll(); }
+  document.getElementById('addCostBtn').addEventListener('click', () => openCostModal(null));
+  document.getElementById('cancelCostBtn').addEventListener('click', closeCostModal);
+  costOverlay.addEventListener('click', (e) => { if (e.target === costOverlay) closeCostModal(); });
+  document.getElementById('deleteCostBtn').addEventListener('click', () => {
+    const id = document.getElementById('costId').value;
+    if (id && confirm('Eliminare questo costo extra?')) {
+      state.costs = (state.costs || []).filter(c => c.id !== id);
+      save();
+      postToBackend('deleteCost', { id });
+      renderAll();
+      closeCostModal();
+    }
+  });
+  costForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const amount = Number(document.getElementById('costAmount').value);
+    const date = document.getElementById('costDate').value;
+    if (!date || !(amount > 0)) return;
+    const id = document.getElementById('costId').value || uid().replace(/^b_/, 'k_');
+    const cost = {
+      id, date,
+      category: document.getElementById('costCategory').value,
+      amount,
+      currency: document.getElementById('costCurrency').value,
+      notes: document.getElementById('costNotes').value.trim(),
+    };
+    if (!Array.isArray(state.costs)) state.costs = [];
+    const idx = state.costs.findIndex(c => c.id === id);
+    if (idx >= 0) state.costs[idx] = cost; else state.costs.push(cost);
+    save();
+    postToBackend('saveCost', { cost });
+    renderAll();
+    closeCostModal();
+  });
+
   // ---------- export / import ----------
   document.getElementById('exportBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1958,6 +2305,9 @@
           if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
           if (data.ratesManualOverride == null) data.ratesManualOverride = false;
           if (!data.cleanings) data.cleanings = [];
+          // un backup vecchio non contiene i costi extra: restano quelli attuali (sul server non vengono toccati)
+          if (!Array.isArray(data.costs)) data.costs = state.costs || [];
+          if (!Array.isArray(data.fixedCosts) && state.fixedCosts) data.fixedCosts = state.fixedCosts;
           data.bookings.forEach(b => {
             if (!b.currency) b.currency = 'THB';
             if (!b.cleaningDate) b.cleaningDate = b.checkout;
