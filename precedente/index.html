@@ -486,6 +486,81 @@
     /* il suggerimento resta nascosto, ma compare mentre stai scegliendo le date */
     .cal-hint.selecting { display: block; }
   }
+  /* ---------- Giro 2 (novembre 2026): filtri, elenchi che scorrono, pulizia extra dal giorno ---------- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted); background: #FCFBF8; }
+  .chip.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .chip.on:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .filter-search { margin-bottom: 10px; }
+  .filter-search input { width: 100%; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; color: var(--text); background: #fff; -webkit-appearance: none; appearance: none; }
+  .filter-search input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-light); }
+  .list-count { font-size: 12px; color: var(--muted); font-weight: 600; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+  .net-note { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .cal-pick { display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--brand-light); color: var(--brand-dark); font-size: 12px; font-weight: 600; }
+  .cal-pick.open { display: flex; }
+  .cal-pick button { background: #fff; border-color: var(--brand); color: var(--brand-dark); }
+  .cal-grid { touch-action: pan-y; }
+  @media (max-width: 560px) {
+    /* gli elenchi lunghi scorrono dentro il loro riquadro, così la pagina resta corta */
+    .scroll-box { overflow-y: auto; -webkit-overflow-scrolling: touch; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px 2px 0; margin: 0 -2px; }
+    #bookingList.scroll-box { max-height: 58vh; max-height: 58dvh; }
+    #cleaningList.scroll-box { max-height: 46vh; max-height: 46dvh; }
+    .scroll-box.no-scroll { border: none; padding: 0; margin: 0; }
+    .chip { min-height: 36px; padding: 6px 12px; font-size: 13px; flex: 0 0 auto; white-space: nowrap; }
+    /* una riga sola per gruppo: se non ci sta, scorre di lato */
+    .chip-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .filter-search input { font-size: 16px; min-height: 44px; }
+    .cal-pick button { flex: 1 1 100%; }
+  }
+  /* ---------- Giro 2: numeri (ricavi netti, costi, costi extra) ---------- */
+  .rates-toggle-row { justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rates-toggle-row .net-note { flex: 1 1 220px; }
+  .field-hint { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin: -6px 0 12px; }
+  .period-costs { margin-top: 10px; }
+  .period-costs:empty { display: none; }
+  .period-costs .stat-card { background: #FCFBF8; }
+  .stat-card.result-pos .stat-value { color: var(--brand-dark); }
+  .stat-card.result-neg .stat-value { color: #B91C1C; }
+  .card .net-note { margin: 12px 0 0; }
+  /* Con una colonna sola (telefono, finestre strette) l'ordine resta quello di sempre: calendario,
+     metriche, pulizie, prenotazioni; le sezioni nuove (costi extra, esporta) vengono dopo. */
+  @media (max-width: 900px) {
+    .layout { gap: 0; }
+    .layout > div { display: contents; }
+    #cleaningSection { order: 3; }
+    #bookingsSection { order: 4; }
+    #costsSection { order: 5; }
+    #exportSection { order: 6; }
+  }
+  .period-inputs select { min-width: 170px; background: #fff; }
+  .cost-auto { font-size: 11px; font-weight: 700; color: var(--muted); padding: 0 6px; white-space: nowrap; }
+  #costList { margin-top: 14px; }
+  @media (max-width: 560px) {
+    #costList.scroll-box { max-height: 52vh; max-height: 52dvh; }
+    .period-inputs select { min-width: 0; width: 100%; }
+    .period-inputs .field { flex: 1 1 130px; }
+    .period-inputs .field.field-wide { flex: 1 1 100%; }
+    .card-header-row .btn-primary { min-height: 40px; }
+  }
+  /* ---------- Giro 2: esporta in Excel ---------- */
+  .check-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 2px 0 14px; }
+  .check-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; background: #FCFBF8; user-select: none; -webkit-user-select: none; }
+  .check-item input { width: 17px; height: 17px; margin: 0; accent-color: var(--brand); flex: 0 0 auto; }
+  .check-item:has(input:checked) { border-color: var(--brand); background: #F5FBFA; }
+  .export-actions { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+  .export-actions .field { margin-bottom: 0; min-width: 120px; }
+  .export-actions select { background: #fff; }
+  .export-msg { font-size: 12px; color: var(--muted); margin-top: 10px; min-height: 16px; line-height: 1.45; }
+  .export-msg.err { color: #B91C1C; font-weight: 600; }
+  .link-btn { border: none; background: none; padding: 0 2px; font-size: 12px; font-weight: 700; color: var(--brand-dark); text-decoration: underline; min-height: 0; }
+  .link-btn:hover { background: none; }
+  .check-tools { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  @media (max-width: 560px) {
+    .check-item { min-height: 44px; }
+    .export-actions .btn-primary { flex: 1 1 auto; min-height: 48px; font-size: 15px; }
+    .link-btn { min-height: 32px; font-size: 13px; }
+  }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
   .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
@@ -554,6 +629,7 @@
     </div>
   </div>
   <div class="rates-toggle-row">
+    <span class="net-note" id="netNote">Ricavi al netto di commissioni e costi delle OTA (Airbnb, Booking.com): sono gli importi che incassi.</span>
     <button id="toggleRates">Tassi di cambio ▾</button>
   </div>
   <div class="rates-panel" id="ratesPanel">
@@ -589,6 +665,10 @@
         </div>
         <div class="cal-hint" id="calHint">Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.</div>
         <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-pick" id="calPick">
+          <span id="calPickText"></span>
+          <button class="btn-small" type="button" id="calPickCleaning">✦ Pulizia extra in questo giorno</button>
+        </div>
         <div class="legend">
           <span><span class="dot" style="background:var(--airbnb)"></span>Airbnb</span>
           <span><span class="dot" style="background:var(--booking)"></span>Booking</span>
@@ -615,6 +695,65 @@
           </div>
         </div>
         <div class="period-results" id="periodResults"></div>
+        <div class="period-results period-costs" id="periodCosts"></div>
+        <p class="net-note">Ricavi al netto di commissioni e costi delle OTA (Airbnb, Booking.com). Costi totali = pulizie + costi extra (compreso il fisso mensile). Risultato netto = ricavi − costi totali.</p>
+      </div>
+
+      <div class="card" id="costsSection">
+        <div class="card-header-row">
+          <h2>Costi extra</h2>
+          <button class="btn-small btn-primary" type="button" id="addCostBtn">+ Costo extra</button>
+        </div>
+        <p class="hint">Lavanderia, acqua delle cisterne, manutenzioni varie. Il costo fisso di giardino e piscina si aggiunge da solo il primo di ogni mese.</p>
+        <div class="period-inputs">
+          <div class="field field-wide">
+            <label>Periodo</label>
+            <select id="costsPreset" aria-label="Periodo dei costi extra"></select>
+          </div>
+          <div class="field">
+            <label>Dal</label>
+            <input type="date" id="costsFrom" />
+          </div>
+          <div class="field">
+            <label>Al</label>
+            <input type="date" id="costsTo" />
+          </div>
+        </div>
+        <div class="period-results" id="costsTotals"></div>
+        <div id="costList" class="scroll-box"></div>
+      </div>
+
+      <div class="card" id="exportSection">
+        <h2>Esporta in Excel</h2>
+        <p class="hint">Scegli il periodo e i numeri che ti servono: scarichi un file Excel con una riga per ogni mese e il totale.</p>
+        <div class="period-inputs">
+          <div class="field field-wide">
+            <label>Periodo</label>
+            <select id="exportPreset" aria-label="Periodo da esportare"></select>
+          </div>
+          <div class="field">
+            <label>Dal</label>
+            <input type="date" id="exportFrom" />
+          </div>
+          <div class="field">
+            <label>Al</label>
+            <input type="date" id="exportTo" />
+          </div>
+        </div>
+        <div class="check-tools"><span>Numeri da mettere nel file</span><span><button type="button" class="link-btn" id="exportAll">tutti</button> · <button type="button" class="link-btn" id="exportNone">nessuno</button></span></div>
+        <div class="check-grid" id="exportMetrics"></div>
+        <div class="export-actions">
+          <div class="field">
+            <label>Valuta del file</label>
+            <select id="exportCurrency">
+              <option value="USD">USD</option>
+              <option value="THB">THB</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <button class="btn-primary" type="button" id="exportXlsxBtn">Scarica Excel</button>
+        </div>
+        <div class="export-msg" id="exportMsg"></div>
       </div>
     </div>
 
@@ -625,7 +764,7 @@
           <button class="btn-small" type="button" id="cleaningUndoBtn" style="display:none;">↩ Annulla ultima azione</button>
         </div>
         <p class="hint">Pulizie generate dai check-out e pulizie extra, con costo se inserito.</p>
-        <div id="cleaningList"></div>
+        <div id="cleaningList" class="scroll-box"></div>
       </div>
       <div class="card" id="bookingsSection">
         <div class="card-header-row">
@@ -633,6 +772,7 @@
           <button class="btn-small" type="button" id="bookingsToggleBtn" aria-expanded="true">Comprimi ▾</button>
         </div>
         <div id="bookingsBody">
+          <p class="hint">Gli importi sono al netto di commissioni e costi delle OTA.</p>
           <div class="period-inputs" style="margin-bottom:12px;">
             <div class="field">
               <label>Dal</label>
@@ -644,7 +784,23 @@
             </div>
             <button class="btn-small" type="button" id="bookingsFilterReset">Mostra tutte</button>
           </div>
-          <div id="bookingList"></div>
+          <div class="chip-row" id="bookingsPeriodChips" aria-label="Periodi rapidi">
+            <button class="chip" type="button" data-period="future">Future</button>
+            <button class="chip" type="button" data-period="month">Questo mese</button>
+            <button class="chip" type="button" data-period="year">Quest'anno</button>
+            <button class="chip" type="button" data-period="past">Passate</button>
+          </div>
+          <div class="chip-row" id="bookingsSourceChips" aria-label="Canale">
+            <button class="chip" type="button" data-source="airbnb">Airbnb</button>
+            <button class="chip" type="button" data-source="booking">Booking</button>
+            <button class="chip" type="button" data-source="diretta">Diretta</button>
+            <button class="chip" type="button" data-source="altro">Altro</button>
+          </div>
+          <div class="filter-search">
+            <input type="search" id="bookingsSearch" placeholder="Cerca per nome o nota…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Cerca nelle prenotazioni" />
+          </div>
+          <div class="list-count" id="bookingsCount"></div>
+          <div id="bookingList" class="scroll-box"></div>
         </div>
       </div>
     </div>
@@ -703,6 +859,7 @@
           </select>
         </div>
       </div>
+      <div class="field-hint">Importo netto: quello che incassi, già tolte commissioni e costi di Airbnb/Booking.</div>
       <div class="field">
         <label>Note (opzionale)</label>
         <textarea id="notes" rows="2" placeholder="es. arrivo tardi, richiesta culla..."></textarea>
@@ -802,6 +959,53 @@
   </div>
 </div>
 
+<div class="overlay" id="costOverlay">
+  <div class="modal">
+    <h3 id="costModalTitle">Costo extra</h3>
+    <form id="costForm">
+      <input type="hidden" id="costId" />
+      <div class="field-row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="costDate" required />
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="costCategory">
+            <option value="lavanderia">Lavanderia</option>
+            <option value="acqua">Acqua cisterne (refill)</option>
+            <option value="manutenzione">Manutenzione</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Importo</label>
+          <input type="number" id="costAmount" min="0.01" step="0.01" required placeholder="es. 800" inputmode="decimal" />
+        </div>
+        <div class="field narrow">
+          <label>Valuta</label>
+          <select id="costCurrency">
+            <option value="THB">THB</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nota (opzionale)</label>
+        <textarea id="costNotes" rows="2" placeholder="es. refill 2 cisterne, riparazione pompa..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="deleteCostBtn" class="btn-danger" style="display:none;margin-right:auto;">Elimina</button>
+        <button type="button" id="cancelCostBtn">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="backupWarning" style="display:none; margin:16px auto; max-width:720px; padding:10px 14px; border:1px solid #F59E0B; border-radius:10px; background:#FFFBEB; color:#92400E; font-size:13px;">
   Il backup automatico del foglio non gira da più di 3 giorni: fai «Esporta backup» e avvisa chi segue il PMS.
 </div>
@@ -876,6 +1080,7 @@
     }
     if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
     if (!data.cleanings) data.cleanings = [];
+    if (!Array.isArray(data.costs)) data.costs = [];
     // migrate old bookings without currency/cleaning fields
     (data.bookings || []).forEach(b => {
       if (!b.currency) b.currency = 'THB';
@@ -930,6 +1135,9 @@
       if (!data.rates) data.rates = { ...DEFAULT_RATES };
       data.rates.USD = 1;
       if (!data.cleanings) data.cleanings = [];
+      // costi extra: se il server non li manda (versione vecchia) restano quelli di questo dispositivo
+      if (!Array.isArray(data.costs)) data.costs = state.costs || [];
+      if (!Array.isArray(data.fixedCosts) && state.fixedCosts) data.fixedCosts = state.fixedCosts;
       data.bookings.forEach(b => {
         if (!b.currency) b.currency = 'THB';
         if (!b.cleaningTime) b.cleaningTime = '11:00';
@@ -1059,6 +1267,172 @@
     });
     return { totalUSD, count };
   }
+
+  // ---------- costi extra ----------
+  // Costo fisso di ogni mese: arriva dal backend (si cambia nella scheda Config); questo è il valore di riserva.
+  const DEFAULT_FIXED_COSTS = [{ id: 'fisso_giardino_piscina', label: 'Manutenzione giardino e piscina', amount: 1500, currency: 'THB', from: '2026-01' }];
+  const COST_CATEGORIES = {
+    lavanderia: { label: 'Lavanderia', color: '#0891B2' },
+    acqua: { label: 'Acqua cisterne', color: '#2563EB' },
+    manutenzione: { label: 'Manutenzione', color: '#B45309' },
+    altro: { label: 'Altro', color: 'var(--altro)' },
+    fisso: { label: 'Fisso mensile', color: 'var(--brand)' },
+  };
+  function fixedCostList(){
+    return (Array.isArray(state.fixedCosts) && state.fixedCosts.length) ? state.fixedCosts : DEFAULT_FIXED_COSTS;
+  }
+  // Voci di costo extra nell'intervallo [rangeStart, rangeEndExclusive): quelle inserite a mano
+  // più il fisso mensile, che vale come una voce datata il primo giorno di ogni mese.
+  function costEntriesForRange(rangeStart, rangeEndExclusive){
+    const out = (state.costs || [])
+      .filter(c => c.date >= rangeStart && c.date < rangeEndExclusive && c.amount)
+      .map(c => ({ id: c.id, date: c.date, category: COST_CATEGORIES[c.category] ? c.category : 'altro', amount: Number(c.amount), currency: c.currency || 'THB', notes: c.notes || '', fixed: false }));
+    const y0 = Number(rangeStart.slice(0, 4)), m0 = Number(rangeStart.slice(5, 7)) - 1;
+    fixedCostList().forEach(f => {
+      if (!f || !(Number(f.amount) > 0)) return;
+      for (let i = 0; i < 1200; i++) {
+        const first = isoFromYMD(y0, m0 + i, 1);
+        if (first >= rangeEndExclusive) break;
+        if (first < rangeStart || first.slice(0, 7) < (f.from || '0000-00')) continue;
+        out.push({ id: f.id + '_' + first.slice(0, 7), date: first, category: 'fisso', amount: Number(f.amount), currency: f.currency || 'THB', notes: f.label || 'Costo fisso mensile', fixed: true });
+      }
+    });
+    return out.sort((a, b) => (b.date + (b.fixed ? '0' : '1')).localeCompare(a.date + (a.fixed ? '0' : '1')));
+  }
+  function computeExtraCostForRange(rangeStart, rangeEndExclusive){
+    let totalUSD = 0, fixedUSD = 0, count = 0;
+    costEntriesForRange(rangeStart, rangeEndExclusive).forEach(c => {
+      const usd = toUSD(c.amount, c.currency);
+      totalUSD += usd; count++;
+      if (c.fixed) fixedUSD += usd;
+    });
+    return { totalUSD, fixedUSD, count };
+  }
+  // Tutti i numeri di un periodo in un colpo solo (usati da metriche, costi extra ed esportazione).
+  function computeAllForRange(rangeStart, rangeEndExclusive){
+    const stats = computeStatsForRange(rangeStart, rangeEndExclusive);
+    const cleaning = computeCleaningCostForRange(rangeStart, rangeEndExclusive);
+    const extra = computeExtraCostForRange(rangeStart, rangeEndExclusive);
+    const costsUSD = cleaning.totalUSD + extra.totalUSD;
+    return { stats, cleaning, extra, costsUSD, netUSD: stats.revenueUSD - costsUSD };
+  }
+  function usdWithThb(usd){
+    return fmtUSD(usd) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(usd)) + '</span>';
+  }
+  function statCardsHtml(cards){
+    return cards.map(c => `
+      <div class="stat-card${c.cls ? ' ' + c.cls : ''}">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${c.value}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('');
+  }
+  // Scelta del periodo: un elenco con anni e mesi, più due date libere. Scegliendo un mese le
+  // date si riempiono da sole; cambiando una data l'elenco passa a «Tra due date».
+  function setupPeriodPicker(presetId, fromId, toId, defaultValue, onChange){
+    const sel = document.getElementById(presetId), fromEl = document.getElementById(fromId), toEl = document.getElementById(toId);
+    function rangeOf(v){
+      if (v.charAt(0) === 'y') { const y = Number(v.slice(2)); return [isoFromYMD(y, 0, 1), isoFromYMD(y, 11, 31)]; }
+      if (v.charAt(0) === 'm') { const y = Number(v.slice(2, 6)), m = Number(v.slice(7, 9)) - 1; return [isoFromYMD(y, m, 1), isoFromYMD(y, m + 1, 0)]; }
+      return null;
+    }
+    function fill(){
+      const today = todayISO();
+      const curY = Number(today.slice(0, 4)), curM = Number(today.slice(5, 7)) - 1;
+      let firstYM = today.slice(0, 7);
+      state.bookings.forEach(b => { if (b.checkin && b.checkin.slice(0, 7) < firstYM) firstYM = b.checkin.slice(0, 7); });
+      (state.costs || []).forEach(c => { if (c.date && c.date.slice(0, 7) < firstYM) firstYM = c.date.slice(0, 7); });
+      fixedCostList().forEach(f => { if (f.from && f.from < firstYM) firstYM = f.from; });
+      const firstY = Number(firstYM.slice(0, 4));
+      const keep = sel.value;
+      let html = '<option value="custom">Tra due date</option><optgroup label="Anni">';
+      for (let y = curY + 1; y >= firstY; y--) html += '<option value="y:' + y + '">Anno ' + y + '</option>';
+      html += '</optgroup><optgroup label="Mesi">';
+      for (let i = 12; i > -1200; i--) {
+        const ym = isoFromYMD(curY, curM + i, 1).slice(0, 7);
+        if (ym < firstYM) break;
+        html += '<option value="m:' + ym + '">' + MONTHS[Number(ym.slice(5, 7)) - 1] + ' ' + ym.slice(0, 4) + (i === 0 ? ' (questo mese)' : '') + '</option>';
+      }
+      sel.innerHTML = html + '</optgroup>';
+      if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
+      else matchPreset();
+    }
+    function matchPreset(){
+      let found = 'custom';
+      Array.prototype.forEach.call(sel.options, o => {
+        const r = rangeOf(o.value);
+        if (found === 'custom' && r && r[0] === fromEl.value && r[1] === toEl.value) found = o.value;
+      });
+      sel.value = found;
+    }
+    sel.addEventListener('change', () => {
+      const r = rangeOf(sel.value);
+      if (r) { fromEl.value = r[0]; toEl.value = r[1]; }
+      onChange();
+    });
+    [fromEl, toEl].forEach(el => el.addEventListener('change', () => { matchPreset(); onChange(); }));
+    const today = todayISO();
+    const def = rangeOf(defaultValue === 'year' ? 'y:' + today.slice(0, 4) : 'm:' + today.slice(0, 7));
+    fromEl.value = def[0]; toEl.value = def[1];
+    fill();
+    return {
+      refresh: fill,
+      range(){ const from = fromEl.value, to = toEl.value; return { from, to, valid: !!from && !!to && to >= from }; },
+    };
+  }
+  let lastCostsPeriodKey = '';
+  function renderCosts(){
+    costsPicker.refresh();
+    const r = costsPicker.range();
+    const totalsEl = document.getElementById('costsTotals');
+    const listEl = document.getElementById('costList');
+    if (!r.valid) {
+      totalsEl.innerHTML = '';
+      listEl.classList.add('no-scroll');
+      listEl.innerHTML = '<div class="empty-state">Seleziona un intervallo di date valido.</div>';
+      return;
+    }
+    const end = addDays(r.to, 1);
+    const all = computeAllForRange(r.from, end);
+    const entries = costEntriesForRange(r.from, end);
+    const manual = entries.filter(c => !c.fixed).length;
+    totalsEl.innerHTML = statCardsHtml([
+      { label: 'Totale costi extra', value: usdWithThb(all.extra.totalUSD), sub: manual + (manual === 1 ? ' voce inserita' : ' voci inserite') + (entries.length > manual ? ' + fisso mensile' : '') },
+      { label: 'di cui fisso mensile', value: usdWithThb(all.extra.fixedUSD), sub: 'giardino e piscina · ' + (entries.length - manual) + (entries.length - manual === 1 ? ' mese' : ' mesi') },
+      { label: 'Pulizie nel periodo', value: usdWithThb(all.cleaning.totalUSD), sub: all.cleaning.count + ' pulizie con costo inserito' },
+      { label: 'Totale costi', value: usdWithThb(all.costsUSD), sub: 'pulizie + costi extra' },
+    ]);
+    const key = r.from + '|' + r.to;
+    if (key !== lastCostsPeriodKey) { listEl.scrollTop = 0; lastCostsPeriodKey = key; }
+    listEl.classList.toggle('no-scroll', entries.length <= 4);
+    if (!entries.length) {
+      listEl.innerHTML = '<div class="empty-state">Nessun costo extra in questo periodo. Aggiungine uno con "+ Costo extra".</div>';
+      return;
+    }
+    listEl.innerHTML = entries.map(c => {
+      const cat = COST_CATEGORIES[c.category];
+      let amountStr = Number(c.amount).toLocaleString('it-IT') + ' ' + c.currency;
+      if (c.currency !== 'USD') amountStr += ' (≈ ' + fmtUSD(toUSD(c.amount, c.currency)) + ')';
+      const title = c.fixed ? (c.notes + ' · ' + MONTHS[Number(c.date.slice(5, 7)) - 1].toLowerCase() + ' ' + c.date.slice(0, 4)) : (c.notes || cat.label);
+      return `
+      <div class="booking-item">
+        <div class="b-left">
+          <span class="src-tag" style="background:${cat.color}">${cat.label}</span>
+          <div class="b-info">
+            <div class="b-guest">${escapeHtml(title)}</div>
+            <div class="b-dates">${fmtDate(c.date)} · ${amountStr}</div>
+          </div>
+        </div>
+        <div class="b-actions">
+          ${c.fixed ? '<span class="cost-auto">automatico</span>' : `<button class="btn-small" data-edit-cost="${escapeHtml(c.id)}">Modifica</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-edit-cost]').forEach(elm => {
+      elm.addEventListener('click', () => openCostModal(elm.getAttribute('data-edit-cost')));
+    });
+  }
+  const costsPicker = setupPeriodPicker('costsPreset', 'costsFrom', 'costsTo', 'month', () => renderCosts());
 
   // ---------- property name ----------
   const propertyNameEl = document.getElementById('propertyName');
@@ -1203,15 +1577,24 @@
     const from = periodFromEl.value;
     const to = periodToEl.value;
     const el = document.getElementById('periodResults');
+    const costsEl = document.getElementById('periodCosts');
     if (!from || !to || to < from) {
       el.innerHTML = '<div class="empty-state">Seleziona un intervallo di date valido.</div>';
+      costsEl.innerHTML = '';
       return;
     }
-    const stats = computeStatsForRange(from, addDays(to,1));
+    const all = computeAllForRange(from, addDays(to,1));
+    costsEl.innerHTML = statCardsHtml([
+      { label: 'Costo pulizie', value: usdWithThb(all.cleaning.totalUSD), sub: all.cleaning.count + ' pulizie con costo inserito' },
+      { label: 'Costi extra', value: usdWithThb(all.extra.totalUSD), sub: all.extra.fixedUSD > 0 ? ('di cui fisso ' + fmtUSD(all.extra.fixedUSD)) : (all.extra.count + ' voci') },
+      { label: 'Costi totali', value: usdWithThb(all.costsUSD), sub: 'pulizie + costi extra' },
+      { label: 'Risultato netto', value: usdWithThb(all.netUSD), sub: 'ricavi netti − costi totali', cls: all.netUSD < 0 ? 'result-neg' : 'result-pos' },
+    ]);
+    const stats = all.stats;
     const cards = [
       { label: 'Notti nel periodo', value: stats.totalNights, sub: fmtDate(from) + ' → ' + fmtDate(to) },
       { label: 'Notti occupate', value: stats.occupiedNights, sub: stats.occPct + '% occupazione' },
-      { label: 'Ricavi', value: fmtUSD(stats.revenueUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(stats.revenueUSD)) + '</span>', sub: 'convertiti automaticamente' },
+      { label: 'Ricavi', value: fmtUSD(stats.revenueUSD) + ' <span style="font-size:11px;font-weight:700;color:var(--muted);">≈ ' + fmtTHB(usdToTHB(stats.revenueUSD)) + '</span>', sub: 'netti OTA · convertiti in USD' },
       { label: 'ADR (USD)', value: stats.adr != null ? fmtUSD(stats.adr) : '—', sub: 'tariffa media/notte' },
       { label: 'RevPAR (USD)', value: stats.revpar != null ? fmtUSD(stats.revpar) : '—', sub: 'ricavo per notte disponibile' },
     ];
@@ -1257,6 +1640,11 @@
       document.getElementById('calHint').textContent =
         'Clicca sulla data di arrivo e poi su quella di partenza per creare subito una prenotazione, come su Airbnb/Booking.';
     }
+
+    // Con un giorno scelto compare, sotto il calendario, la scorciatoia per la pulizia extra
+    // di quel giorno (il secondo clic su un'altra data crea la prenotazione, come sempre).
+    document.getElementById('calPick').classList.toggle('open', !!selection.start);
+    if (selection.start) document.getElementById('calPickText').textContent = 'Giorno scelto: ' + fmtDate(selection.start);
 
     for (let d=1; d<=daysInMonth; d++){
       const iso = isoFromYMD(y,m,d);
@@ -1385,6 +1773,14 @@
     openModal(null, { checkin: start, checkout });
   }
 
+  document.getElementById('calPickCleaning').addEventListener('click', () => {
+    const day = selection.start;
+    if (!day) return;
+    selection.start = null;
+    renderCalendar();
+    openCleaningModal(null, day);
+  });
+
   // ---------- cleaning list ----------
   let lastCleaningUndo = null; // { type: 'booking'|'extra', id, prevStatus } — un solo passo indietro
   document.getElementById('cleaningUndoBtn').addEventListener('click', () => {
@@ -1409,6 +1805,7 @@
       .sort((a,b) => (a.date + (a.time||'')).localeCompare(b.date + (b.time||'')))
       .slice(0, 10);
     const el = document.getElementById('cleaningList');
+    el.classList.toggle('no-scroll', upcoming.length <= 3);
     if (!upcoming.length) {
       el.innerHTML = '<div class="empty-state">Nessuna pulizia in programma</div>';
       return;
@@ -1467,21 +1864,60 @@
   // ---------- booking list ----------
   const bookingsFilterFromEl = document.getElementById('bookingsFilterFrom');
   const bookingsFilterToEl = document.getElementById('bookingsFilterTo');
+  const bookingsSearchEl = document.getElementById('bookingsSearch');
+  const bookingsSourceFilter = { airbnb: false, booking: false, diretta: false, altro: false };
+  // confronto senza maiuscole né accenti: «jose» trova «José»
+  function normText(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+  function bookingPeriodPreset(name){
+    const today = todayISO();
+    const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7)) - 1;
+    if (name === 'future') return [today, ''];
+    if (name === 'month') return [isoFromYMD(y, m, 1), isoFromYMD(y, m + 1, 0)];
+    if (name === 'year') return [isoFromYMD(y, 0, 1), isoFromYMD(y, 11, 31)];
+    return ['', addDays(today, -1)]; // passate
+  }
+  function updateBookingFilterChips(){
+    document.querySelectorAll('#bookingsPeriodChips .chip').forEach(ch => {
+      const r = bookingPeriodPreset(ch.getAttribute('data-period'));
+      ch.classList.toggle('on', bookingsFilterFromEl.value === r[0] && bookingsFilterToEl.value === r[1]);
+    });
+    document.querySelectorAll('#bookingsSourceChips .chip').forEach(ch => {
+      ch.classList.toggle('on', !!bookingsSourceFilter[ch.getAttribute('data-source')]);
+    });
+  }
   function renderBookingList(){
     let sorted = [...state.bookings].sort((a,b) => a.checkin.localeCompare(b.checkin));
     const filterFrom = bookingsFilterFromEl.value;
     const filterTo = bookingsFilterToEl.value;
-    const filterActive = filterFrom && filterTo && filterTo >= filterFrom;
+    // Periodo: con due date vale l'intervallo (come sempre); con una sola, «da quella data
+    // in poi» oppure «fino a quella data».
+    const filterActive = !!(filterFrom || filterTo) && !(filterFrom && filterTo && filterTo < filterFrom);
     if (filterActive) {
-      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom, checkout: addDays(filterTo, 1) }));
+      sorted = sorted.filter(b => overlaps(b, { checkin: filterFrom || '0000-01-01', checkout: filterTo ? addDays(filterTo, 1) : '9999-12-31' }));
     }
+    const sourcesOn = Object.keys(bookingsSourceFilter).filter(k => bookingsSourceFilter[k]);
+    if (sourcesOn.length) sorted = sorted.filter(b => bookingsSourceFilter[b.source]);
+    const needle = normText(bookingsSearchEl.value);
+    if (needle) sorted = sorted.filter(b => normText((b.guest || '') + ' ' + (b.notes || '')).indexOf(needle) !== -1);
+    const otherFilters = sourcesOn.length > 0 || !!needle;
+    updateBookingFilterChips();
     const el = document.getElementById('bookingList');
+    const countEl = document.getElementById('bookingsCount');
+    el.classList.toggle('no-scroll', sorted.length <= 4);
     if (!sorted.length) {
-      el.innerHTML = filterActive
+      countEl.textContent = '';
+      el.innerHTML = otherFilters
+        ? '<div class="empty-state">Nessuna prenotazione con questi filtri.</div>'
+        : filterActive
         ? '<div class="empty-state">Nessuna prenotazione in questo periodo.</div>'
         : '<div class="empty-state">Nessuna prenotazione. Aggiungine una con "+ Nuova prenotazione" o cliccando sul calendario.</div>';
       return;
     }
+    const shownNights = sorted.reduce((n, b) => n + nightsBetween(b.checkin, b.checkout), 0);
+    const shownUSD = sorted.reduce((t, b) => t + (b.price ? toUSD(Number(b.price), b.currency) : 0), 0);
+    countEl.textContent = sorted.length + (sorted.length === 1 ? ' prenotazione' : ' prenotazioni')
+      + (sorted.length < state.bookings.length ? ' su ' + state.bookings.length : '')
+      + ' · ' + shownNights + ' notti · ' + fmtUSD(shownUSD) + ' netti';
     el.innerHTML = sorted.map(b => {
       let priceStr = '';
       if (b.price) {
@@ -1512,7 +1948,26 @@
   document.getElementById('bookingsFilterReset').addEventListener('click', () => {
     bookingsFilterFromEl.value = '';
     bookingsFilterToEl.value = '';
+    bookingsSearchEl.value = '';
+    Object.keys(bookingsSourceFilter).forEach(k => { bookingsSourceFilter[k] = false; });
     renderBookingList();
+  });
+  bookingsSearchEl.addEventListener('input', renderBookingList);
+  document.querySelectorAll('#bookingsPeriodChips .chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const r = bookingPeriodPreset(ch.getAttribute('data-period'));
+      const already = bookingsFilterFromEl.value === r[0] && bookingsFilterToEl.value === r[1];
+      bookingsFilterFromEl.value = already ? '' : r[0]; // secondo tocco sullo stesso periodo: lo toglie
+      bookingsFilterToEl.value = already ? '' : r[1];
+      renderBookingList();
+    });
+  });
+  document.querySelectorAll('#bookingsSourceChips .chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const k = ch.getAttribute('data-source');
+      bookingsSourceFilter[k] = !bookingsSourceFilter[k];
+      renderBookingList();
+    });
   });
   // Comprimi/espandi la lista "Tutte le prenotazioni" (utile soprattutto da mobile
   // con tante prenotazioni salvate).
@@ -1536,6 +1991,8 @@
     renderCleaningList();
     renderBookingList();
     renderPeriodStats();
+    renderCosts();
+    exportPicker.refresh();
   }
 
   // ---------- month nav ----------
@@ -1558,6 +2015,28 @@
     syncPeriodToViewMonth();
     renderAll();
   });
+
+  // Sul telefono il mese si cambia anche strisciando il dito sul calendario (sinistra = mese
+  // dopo, destra = mese prima). Un tocco semplice resta un tocco: la scelta delle date non cambia.
+  (function(){
+    const grid = document.getElementById('calGrid');
+    let sx = 0, sy = 0, st = 0, tracking = false;
+    grid.addEventListener('touchstart', (e) => {
+      tracking = e.touches.length === 1;
+      if (!tracking) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    }, { passive: true });
+    grid.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
+    grid.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) < 56 || Math.abs(dx) < 2 * Math.abs(dy) || Date.now() - st > 800) return;
+      document.getElementById(dx < 0 ? 'nextMonth' : 'prevMonth').click();
+      if (grid.animate) grid.animate([{ opacity: .35, transform: 'translateX(' + (dx < 0 ? 28 : -28) + 'px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+    }, { passive: true });
+  })();
 
   // ---------- blocco scroll di sfondo (stabilità su iPhone) ----------
   let savedScrollY = 0;
@@ -1613,7 +2092,8 @@
   const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
+    if (costOverlay.classList.contains('open')) closeCostModal();
+    else if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
     else if (overlay.classList.contains('open')) closeModal();
   });
 
@@ -1645,7 +2125,9 @@
       document.getElementById('bookingId').value = '';
       document.getElementById('currency').value = 'THB';
       document.getElementById('cleaningTime').value = '11:00';
-      document.getElementById('cleaningStatus').value = 'scheduled';
+      // Regola: ogni prenotazione nuova nasce con la pulizia «da pianificare»; a «pianificata»
+      // e poi a «fatta» la porta solo chi gestisce la villa.
+      document.getElementById('cleaningStatus').value = 'unscheduled';
       document.getElementById('cleaningCostCurrency').value = 'THB';
       const ci = (prefill && prefill.checkin) ? prefill.checkin : todayISO();
       const co = (prefill && prefill.checkout) ? prefill.checkout : addDays(ci,2);
@@ -1725,7 +2207,7 @@
   const cleaningOverlay = document.getElementById('cleaningOverlay');
   const cleaningForm = document.getElementById('cleaningForm');
 
-  function openCleaningModal(id){
+  function openCleaningModal(id, presetDate){
     cleaningForm.reset();
     document.getElementById('deleteCleaningBtn').style.display = id ? 'inline-block' : 'none';
     if (id) {
@@ -1741,10 +2223,10 @@
     } else {
       document.getElementById('cleaningModalTitle').textContent = 'Pulizia extra';
       document.getElementById('cleaningId').value = '';
-      document.getElementById('extraCleaningDate').value = todayISO();
+      document.getElementById('extraCleaningDate').value = presetDate || todayISO();
       document.getElementById('extraCleaningTime').value = '11:00';
       document.getElementById('extraCleaningCurrency').value = 'THB';
-      document.getElementById('extraCleaningStatus').value = 'scheduled';
+      document.getElementById('extraCleaningStatus').value = 'unscheduled';
     }
     cleaningOverlay.classList.add('open');
     lockBodyScroll();
@@ -1787,6 +2269,294 @@
     closeCleaningModal();
   });
 
+  // ---------- modal costo extra ----------
+  const costOverlay = document.getElementById('costOverlay');
+  const costForm = document.getElementById('costForm');
+  function openCostModal(id){
+    costForm.reset();
+    document.getElementById('deleteCostBtn').style.display = id ? 'inline-block' : 'none';
+    const c = id ? (state.costs || []).find(x => x.id === id) : null;
+    if (c) {
+      document.getElementById('costModalTitle').textContent = 'Modifica costo extra';
+      document.getElementById('costId').value = c.id;
+      document.getElementById('costDate').value = c.date;
+      document.getElementById('costCategory').value = COST_CATEGORIES[c.category] && c.category !== 'fisso' ? c.category : 'altro';
+      document.getElementById('costAmount').value = c.amount || '';
+      document.getElementById('costCurrency').value = c.currency || 'THB';
+      document.getElementById('costNotes').value = c.notes || '';
+    } else {
+      document.getElementById('costModalTitle').textContent = 'Costo extra';
+      document.getElementById('costId').value = '';
+      document.getElementById('costDate').value = todayISO();
+      document.getElementById('costCategory').value = 'lavanderia';
+      document.getElementById('costCurrency').value = 'THB';
+    }
+    costOverlay.classList.add('open');
+    lockBodyScroll();
+    costOverlay.querySelector('.modal').scrollTop = 0;
+    if (!c && finePointer) document.getElementById('costAmount').focus();
+  }
+  function closeCostModal(){ costOverlay.classList.remove('open'); unlockBodyScroll(); }
+  document.getElementById('addCostBtn').addEventListener('click', () => openCostModal(null));
+  document.getElementById('cancelCostBtn').addEventListener('click', closeCostModal);
+  costOverlay.addEventListener('click', (e) => { if (e.target === costOverlay) closeCostModal(); });
+  document.getElementById('deleteCostBtn').addEventListener('click', () => {
+    const id = document.getElementById('costId').value;
+    if (id && confirm('Eliminare questo costo extra?')) {
+      state.costs = (state.costs || []).filter(c => c.id !== id);
+      save();
+      postToBackend('deleteCost', { id });
+      renderAll();
+      closeCostModal();
+    }
+  });
+  costForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const amount = Number(document.getElementById('costAmount').value);
+    const date = document.getElementById('costDate').value;
+    if (!date || !(amount > 0)) return;
+    const id = document.getElementById('costId').value || uid().replace(/^b_/, 'k_');
+    const cost = {
+      id, date,
+      category: document.getElementById('costCategory').value,
+      amount,
+      currency: document.getElementById('costCurrency').value,
+      notes: document.getElementById('costNotes').value.trim(),
+    };
+    if (!Array.isArray(state.costs)) state.costs = [];
+    const idx = state.costs.findIndex(c => c.id === id);
+    if (idx >= 0) state.costs[idx] = cost; else state.costs.push(cost);
+    save();
+    postToBackend('saveCost', { cost });
+    renderAll();
+    closeCostModal();
+  });
+
+  // ---------- esporta in Excel ----------
+  // Il file .xlsx viene creato qui nella pagina (nessun servizio esterno, funziona anche senza rete).
+  const EXPORT_METRICS = [
+    { k: 'revenue', label: 'Ricavi totali', type: 'money' },
+    { k: 'adr', label: 'ADR', type: 'money' },
+    { k: 'occ', label: 'Occupazione', type: 'pct' },
+    { k: 'revpar', label: 'RevPAR', type: 'money' },
+    { k: 'cleaning', label: 'Costi pulizie', type: 'money' },
+    { k: 'extra', label: 'Costi extra', type: 'money' },
+    { k: 'costs', label: 'Costi totali', type: 'money' },
+    { k: 'net', label: 'Risultato netto', type: 'money' },
+  ];
+  document.getElementById('exportMetrics').innerHTML = EXPORT_METRICS.map(m =>
+    `<label class="check-item"><input type="checkbox" data-metric="${m.k}" checked /> ${m.label}</label>`).join('');
+  const exportMsgEl = document.getElementById('exportMsg');
+  function setExportMsg(text, isErr){ exportMsgEl.textContent = text || ''; exportMsgEl.classList.toggle('err', !!isErr); }
+  const exportPicker = setupPeriodPicker('exportPreset', 'exportFrom', 'exportTo', 'year', () => setExportMsg(''));
+  function setAllExportMetrics(on){
+    document.querySelectorAll('#exportMetrics input').forEach(i => { i.checked = on; });
+    setExportMsg('');
+  }
+  document.getElementById('exportAll').addEventListener('click', () => setAllExportMetrics(true));
+  document.getElementById('exportNone').addEventListener('click', () => setAllExportMetrics(false));
+
+  function metricUSD(all, k){
+    switch (k) {
+      case 'revenue': return all.stats.revenueUSD;
+      case 'adr': return all.stats.adr;
+      case 'occ': return all.stats.totalNights > 0 ? all.stats.occupiedNights / all.stats.totalNights : null;
+      case 'revpar': return all.stats.revpar;
+      case 'cleaning': return all.cleaning.totalUSD;
+      case 'extra': return all.extra.totalUSD;
+      case 'costs': return all.costsUSD;
+      case 'net': return all.netUSD;
+    }
+    return null;
+  }
+  // ---- scrittura minima di un file .xlsx (zip senza compressione) ----
+  const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+  function crc32(bytes){ let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zipStore(files){
+    const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+    files.forEach(f => {
+      const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true);
+      parts.push(new Uint8Array(lh.buffer), name, data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(14, 0x21, true);
+      ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+      central.push(new Uint8Array(ch.buffer), name);
+      offset += 30 + name.length + data.length;
+    });
+    const centralSize = central.reduce((n, p) => n + p.length, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, centralSize, true); end.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+  function xmlEsc(v){ return String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function colName(i){ let s = ''; i++; while (i > 0) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; }
+  // stili: 0 normale, 1 grassetto, 2 intero, 3 due decimali, 4 percentuale, 5 titolo, 6 intestazione,
+  // 7 grassetto intero, 8 grassetto due decimali, 9 grassetto percentuale, 10 data, 11 grigio
+  const XLSX_STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="0.0%"/><numFmt numFmtId="165" formatCode="dd/mm/yyyy"/></numFmts>'
+    + '<fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF7A7268"/><name val="Calibri"/></font></fonts>'
+    + '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFCCFBF1"/><bgColor indexed="64"/></patternFill></fill></fills>'
+    + '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top style="thin"><color rgb="FF0F766E"/></top><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="12">'
+    + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    + '<xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>'
+    + '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+    + '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+    + '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+    + '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    + '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment wrapText="1" vertical="center"/></xf>'
+    + '<xf numFmtId="3" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>'
+    + '<xf numFmtId="4" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>'
+    + '<xf numFmtId="164" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1"/>'
+    + '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"><alignment horizontal="left"/></xf>'
+    + '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  function sheetXml(rows, widths){
+    let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>';
+    widths.forEach((w, i) => { x += '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; });
+    x += '</cols><sheetData>';
+    rows.forEach((row, r) => {
+      x += '<row r="' + (r + 1) + '">';
+      row.forEach((cell, c) => {
+        if (cell == null || cell.v == null || cell.v === '') return;
+        const ref = colName(c) + (r + 1), st = cell.s ? ' s="' + cell.s + '"' : '';
+        if (typeof cell.v === 'number') { if (isFinite(cell.v)) x += '<c r="' + ref + '"' + st + '><v>' + cell.v + '</v></c>'; }
+        else x += '<c r="' + ref + '"' + st + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(cell.v) + '</t></is></c>';
+      });
+      x += '</row>';
+    });
+    return x + '</sheetData></worksheet>';
+  }
+  function buildXlsx(sheets){
+    const files = [
+      { name: '[Content_Types].xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+        + sheets.map((sh, i) => '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('') + '</Types>' },
+      { name: '_rels/.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+        + sheets.map((sh, i) => '<sheet name="' + xmlEsc(sh.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>').join('') + '</sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        + sheets.map((sh, i) => '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>').join('')
+        + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'xl/styles.xml', text: XLSX_STYLES },
+    ];
+    sheets.forEach((sh, i) => files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', text: sheetXml(sh.rows, sh.widths) }));
+    return zipStore(files);
+  }
+  function excelDate(iso){ return Math.round((Date.UTC(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10))) - Date.UTC(1899, 11, 30)) / 86400000); }
+  // Costruisce le schede del file per il periodo e i numeri scelti.
+  function buildExportSheets(from, to, keys, cur){
+    const end = addDays(to, 1);
+    const rate = cur === 'USD' ? 1 : state.rates[cur];
+    const conv = usd => (usd == null ? null : usd / rate);
+    const moneyStyle = cur === 'THB' ? 2 : 3, moneyBold = cur === 'THB' ? 7 : 8;
+    const metrics = EXPORT_METRICS.filter(m => keys.indexOf(m.k) !== -1);
+    const cell = (all, m, bold) => {
+      const usd = metricUSD(all, m.k);
+      if (usd == null) return null;
+      return m.type === 'pct' ? { v: usd, s: bold ? 9 : 4 } : { v: Math.round(conv(usd) * 100) / 100, s: bold ? moneyBold : moneyStyle };
+    };
+    const showNights = keys.indexOf('occ') !== -1;
+    const rows = [
+      [{ v: state.propertyName || 'Esrah Garden Home Villa', s: 5 }],
+      [{ v: 'Periodo: ' + fmtDate(from) + ' → ' + fmtDate(to) }],
+      [{ v: 'Ricavi al netto di commissioni e costi delle OTA (Airbnb, Booking.com). Importi in ' + cur + '.', s: 11 }],
+      [{ v: 'Costi totali = pulizie + costi extra (compreso il fisso mensile). Risultato netto = ricavi − costi totali.', s: 11 }],
+      [{ v: 'Cambi usati: 1 EUR = ' + state.rates.EUR + ' USD · 1 THB = ' + state.rates.THB + ' USD (' + (state.ratesManualOverride ? 'inseriti a mano' : 'aggiornati il ' + fmtDate(state.ratesFetchedAt)) + '). File creato il ' + fmtDate(todayISO()) + '.', s: 11 }],
+      [],
+    ];
+    const header = [{ v: 'Mese', s: 6 }];
+    if (showNights) header.push({ v: 'Notti', s: 6 }, { v: 'Notti occupate', s: 6 });
+    metrics.forEach(m => header.push({ v: m.label + (m.type === 'money' ? ' (' + cur + ')' : ''), s: 6 }));
+    rows.push(header);
+    // una riga per mese (i mesi a cavallo delle date scelte contano solo per i giorni scelti)
+    let segStart = from, segments = 0;
+    while (segStart < end) {
+      const y = Number(segStart.slice(0, 4)), m = Number(segStart.slice(5, 7)) - 1;
+      const nextMonth = isoFromYMD(y, m + 1, 1);
+      const segEnd = nextMonth < end ? nextMonth : end;
+      const all = computeAllForRange(segStart, segEnd);
+      const whole = segStart.slice(8) === '01' && segEnd === nextMonth;
+      const row = [{ v: MONTHS[m] + ' ' + y + (whole ? '' : ' (dal ' + segStart.slice(8) + ' al ' + addDays(segEnd, -1).slice(8) + ')') }];
+      if (showNights) row.push({ v: all.stats.totalNights }, { v: all.stats.occupiedNights });
+      metrics.forEach(mm => row.push(cell(all, mm, false)));
+      rows.push(row);
+      segStart = segEnd; segments++;
+    }
+    const total = computeAllForRange(from, end);
+    const totalRow = [{ v: 'Totale periodo', s: 1 }];
+    if (showNights) totalRow.push({ v: total.stats.totalNights, s: 7 }, { v: total.stats.occupiedNights, s: 7 });
+    metrics.forEach(mm => totalRow.push(cell(total, mm, true) || { v: '—', s: 1 }));
+    rows.push(totalRow);
+    const widths = [30]; for (let i = 1; i < header.length; i++) widths.push(17);
+    const sheets = [{ name: 'Riepilogo', rows, widths }];
+    const has = k => keys.indexOf(k) !== -1;
+    if (has('revenue') || has('adr') || has('occ') || has('revpar') || has('net')) {
+      const r = [[{ v: 'Check-in', s: 6 }, { v: 'Check-out', s: 6 }, { v: 'Ospite', s: 6 }, { v: 'Canale', s: 6 }, { v: 'Notti nel periodo', s: 6 }, { v: 'Prezzo netto', s: 6 }, { v: 'Valuta', s: 6 }, { v: 'Ricavo nel periodo (' + cur + ')', s: 6 }]];
+      [...state.bookings].sort((a, b) => a.checkin.localeCompare(b.checkin)).forEach(b => {
+        const n = nightsInRangeCount(b, from, end);
+        if (n <= 0) return;
+        const part = b.price ? toUSD(Number(b.price), b.currency) / Math.max(1, nightsBetween(b.checkin, b.checkout)) * n : null;
+        r.push([{ v: excelDate(b.checkin), s: 10 }, { v: excelDate(b.checkout), s: 10 }, { v: b.guest || '' }, { v: SOURCE_LABELS[b.source] || b.source || '' }, { v: n },
+          b.price ? { v: Number(b.price), s: 3 } : null, b.price ? { v: b.currency } : null, part == null ? null : { v: Math.round(conv(part) * 100) / 100, s: moneyStyle }]);
+      });
+      sheets.push({ name: 'Prenotazioni', rows: r, widths: [13, 13, 30, 12, 12, 15, 9, 22] });
+    }
+    if (has('cleaning') || has('costs') || has('net')) {
+      const r = [[{ v: 'Data', s: 6 }, { v: 'Tipo', s: 6 }, { v: 'Descrizione', s: 6 }, { v: 'Stato', s: 6 }, { v: 'Costo', s: 6 }, { v: 'Valuta', s: 6 }, { v: 'Costo (' + cur + ')', s: 6 }]];
+      allCleaningEntries().filter(c => c.date >= from && c.date < end).sort((a, b) => a.date.localeCompare(b.date)).forEach(c => {
+        r.push([{ v: excelDate(c.date), s: 10 }, { v: c.type === 'extra' ? 'Pulizia extra' : 'Dopo check-out' }, { v: c.label || '' }, { v: cleanStatusMeta(c.status).shortLabel },
+          c.cost ? { v: Number(c.cost), s: 3 } : null, c.cost ? { v: c.currency } : null, c.cost ? { v: Math.round(conv(toUSD(Number(c.cost), c.currency)) * 100) / 100, s: moneyStyle } : null]);
+      });
+      sheets.push({ name: 'Pulizie', rows: r, widths: [13, 16, 30, 16, 12, 9, 16] });
+    }
+    if (has('extra') || has('costs') || has('net')) {
+      const r = [[{ v: 'Data', s: 6 }, { v: 'Tipo', s: 6 }, { v: 'Nota', s: 6 }, { v: 'Importo', s: 6 }, { v: 'Valuta', s: 6 }, { v: 'Importo (' + cur + ')', s: 6 }]];
+      costEntriesForRange(from, end).sort((a, b) => a.date.localeCompare(b.date)).forEach(c => {
+        r.push([{ v: excelDate(c.date), s: 10 }, { v: COST_CATEGORIES[c.category].label }, { v: c.notes || '' }, { v: c.amount, s: 3 }, { v: c.currency }, { v: Math.round(conv(toUSD(c.amount, c.currency)) * 100) / 100, s: moneyStyle }]);
+      });
+      sheets.push({ name: 'Costi extra', rows: r, widths: [13, 18, 38, 12, 9, 16] });
+    }
+    return { sheets, months: segments };
+  }
+  function downloadBlob(blob, filename){
+    // Sul telefono, se disponibile, si apre il foglio «Condividi» (Salva su File, apri in Excel…);
+    // altrimenti il normale scaricamento, come per «Esporta backup».
+    let file = null;
+    try { file = new File([blob], filename, { type: blob.type }); } catch (e) {}
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    const plain = () => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    };
+    if (coarse && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: filename }).catch(err => { if (!err || err.name !== 'AbortError') plain(); });
+    } else plain();
+  }
+  document.getElementById('exportXlsxBtn').addEventListener('click', () => {
+    const r = exportPicker.range();
+    if (!r.valid) { setExportMsg('Seleziona un intervallo di date valido.', true); return; }
+    const keys = Array.prototype.map.call(document.querySelectorAll('#exportMetrics input:checked'), i => i.getAttribute('data-metric'));
+    if (!keys.length) { setExportMsg('Scegli almeno un numero da mettere nel file.', true); return; }
+    if (nightsBetween(r.from, r.to) > 3660) { setExportMsg('Periodo troppo lungo: scegli al massimo 10 anni.', true); return; }
+    try {
+      const cur = document.getElementById('exportCurrency').value;
+      const built = buildExportSheets(r.from, r.to, keys, cur);
+      const filename = 'esrah-home-' + r.from + '_' + r.to + '.xlsx';
+      downloadBlob(buildXlsx(built.sheets), filename);
+      setExportMsg('File creato: ' + filename + ' · ' + built.months + (built.months === 1 ? ' mese' : ' mesi') + ', ' + keys.length + (keys.length === 1 ? ' numero' : ' numeri') + ', importi in ' + cur + '.');
+    } catch (e) {
+      console.warn(e);
+      setExportMsg('Non sono riuscito a creare il file. Riprova.', true);
+    }
+  });
+
   // ---------- export / import ----------
   document.getElementById('exportBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1815,6 +2585,9 @@
           if (!data.ratesFetchedAt) data.ratesFetchedAt = EMBEDDED_RATES.fetchedAt;
           if (data.ratesManualOverride == null) data.ratesManualOverride = false;
           if (!data.cleanings) data.cleanings = [];
+          // un backup vecchio non contiene i costi extra: restano quelli attuali (sul server non vengono toccati)
+          if (!Array.isArray(data.costs)) data.costs = state.costs || [];
+          if (!Array.isArray(data.fixedCosts) && state.fixedCosts) data.fixedCosts = state.fixedCosts;
           data.bookings.forEach(b => {
             if (!b.currency) b.currency = 'THB';
             if (!b.cleaningDate) b.cleaningDate = b.checkout;

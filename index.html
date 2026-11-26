@@ -561,6 +561,43 @@
     .export-actions .btn-primary { flex: 1 1 auto; min-height: 48px; font-size: 15px; }
     .link-btn { min-height: 32px; font-size: 13px; }
   }
+
+  /* Scelta del periodo con due tocchi: un solo calendario per «dal… al…» */
+  .field.range-src { display: none !important; }
+  .period-inputs .field.range-field { flex: 0 1 250px; min-width: 0; }
+  .range-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: #fff; font-size: 13px; font-weight: 600; color: var(--text); text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .range-btn svg { flex: 0 0 auto; color: var(--brand); }
+  .range-btn .range-btn-text { overflow: hidden; text-overflow: ellipsis; }
+  .range-btn.empty { color: var(--muted); }
+  .range-btn:focus-visible, .range-day:focus-visible, .range-nav button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-light); border-color: var(--brand); }
+  .modal.range-modal { width: 372px; }
+  .range-status { font-size: 13px; color: var(--muted); margin: -6px 0 12px; min-height: 18px; line-height: 1.4; }
+  .range-status strong { color: var(--text); font-variant-numeric: tabular-nums; }
+  .range-nav { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; }
+  .range-nav .range-month { font-size: 15px; font-weight: 800; flex: 1; text-align: center; }
+  .range-nav button { min-width: 38px; min-height: 38px; padding: 4px 8px; font-size: 16px; line-height: 1; }
+  .range-dows, .range-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .range-dows span { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; padding-bottom: 4px; }
+  .range-grid { row-gap: 3px; touch-action: pan-y; }
+  .range-day { border: none; background: none; border-radius: 999px; padding: 0; height: 42px; font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; transition: none; }
+  .range-day:hover { background: #F3EFE6; }
+  .range-day:active { transform: none; }
+  .range-day.today { box-shadow: inset 0 0 0 1.5px var(--border); }
+  .range-day.in { background: var(--brand-light); border-radius: 0; color: var(--brand-dark); }
+  .range-day.start, .range-day.end { background: var(--brand); color: #fff; font-weight: 800; }
+  .range-day.start { border-radius: 999px 0 0 999px; }
+  .range-day.end { border-radius: 0 999px 999px 0; }
+  .range-day.start.end, .range-day.start.alone { border-radius: 999px; }
+  .range-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+  .range-actions .range-left { margin-right: auto; }
+  @media (max-width: 560px) {
+    .period-inputs .field.range-field { flex: 1 1 100%; }
+    .range-btn { min-height: 44px; font-size: 16px; }
+    .range-day { height: 46px; font-size: 16px; }
+    .range-nav button { min-width: 44px; min-height: 44px; }
+    .range-actions button { min-height: 46px; font-size: 15px; flex: 1 1 auto; }
+    .modal.range-modal { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  }
   .activation { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(250,248,244,.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
   .activation.open { display: flex; }
   .activation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: 100%; max-width: 380px; box-sizing: border-box; box-shadow: 0 12px 40px rgba(0,0,0,.12); }
@@ -682,8 +719,8 @@
       </div>
 
       <div class="card">
-        <h2>ADR e occupazione per periodo</h2>
-        <p class="hint">Scegli un intervallo di date: occupazione, ADR e ricavi (in USD) si aggiornano in automatico.</p>
+        <h2>KPI per periodo</h2>
+        <p class="hint">Scegli un intervallo di date: occupazione, ADR, RevPAR, ricavi, costi e risultato netto si aggiornano in automatico.</p>
         <div class="period-inputs">
           <div class="field">
             <label>Dal</label>
@@ -956,6 +993,26 @@
         <button type="submit" class="btn-primary">Salva</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="overlay" id="rangeOverlay">
+  <div class="modal range-modal" role="dialog" aria-modal="true" aria-labelledby="rangeTitle">
+    <h3 id="rangeTitle">Scegli il periodo</h3>
+    <p class="range-status" id="rangeStatus" aria-live="polite"></p>
+    <div class="range-nav">
+      <button type="button" id="rangePrev" aria-label="Mese precedente">‹</button>
+      <div class="range-month" id="rangeMonth"></div>
+      <button type="button" id="rangeNext" aria-label="Mese successivo">›</button>
+    </div>
+    <div class="range-dows" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+    <div class="range-grid" id="rangeGrid"></div>
+    <div class="range-actions">
+      <button type="button" class="range-left" id="rangeClear">Togli le date</button>
+      <button type="button" id="rangeOnlyFrom">Solo da qui in poi</button>
+      <button type="button" id="rangeOnlyTo">Solo fino a qui</button>
+      <button type="button" id="rangeCancel">Annulla</button>
+    </div>
   </div>
 </div>
 
@@ -2089,10 +2146,156 @@
     updateNightsHint();
   });
   checkoutEl.addEventListener('change', updateNightsHint);
+  // ---- Scelta del periodo con due tocchi ----
+  // I due campi «Dal» e «Al» restano nella pagina (stessi nomi, stessa logica di prima) ma nascosti:
+  // al loro posto c'è un solo pulsante che apre un calendario. Primo tocco = inizio, secondo = fine.
+  const rangeOverlay = document.getElementById('rangeOverlay');
+  const rangeGridEl = document.getElementById('rangeGrid');
+  const rangeStatusEl = document.getElementById('rangeStatus');
+  const rangeSt = { cfg: null, y: 0, m: 0, a: '', b: '', picking: false, hover: '', closing: false, timer: null };
+  function rangeLabelText(from, to){
+    if (from && to) return fmtDate(from) + ' → ' + fmtDate(to);
+    if (from) return 'Dal ' + fmtDate(from);
+    if (to) return 'Fino al ' + fmtDate(to);
+    return 'Scegli le date';
+  }
+  function setupRangeField(fromId, toId, title, allowOpen){
+    const fromEl = document.getElementById(fromId), toEl = document.getElementById(toId);
+    const fField = fromEl.closest('.field'), tField = toEl.closest('.field');
+    fField.classList.add('range-src'); tField.classList.add('range-src');
+    const wrap = document.createElement('div');
+    wrap.className = 'field range-field';
+    wrap.innerHTML = '<label for="' + fromId + 'Range">Dal – al</label><button type="button" class="range-btn" id="' + fromId + 'Range" aria-haspopup="dialog">' +
+      '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>' +
+      '<span class="range-btn-text"></span></button>';
+    fField.parentNode.insertBefore(wrap, fField);
+    const btn = wrap.querySelector('button'), textEl = wrap.querySelector('.range-btn-text');
+    const sync = () => {
+      textEl.textContent = rangeLabelText(fromEl.value, toEl.value);
+      btn.classList.toggle('empty', !fromEl.value && !toEl.value);
+    };
+    // le date cambiano anche da codice (mesi, anni, «Mostra tutte»): la scritta del pulsante le segue sempre
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    [fromEl, toEl].forEach(el => {
+      Object.defineProperty(el, 'value', { configurable: true, get(){ return desc.get.call(this); }, set(v){ desc.set.call(this, v); sync(); } });
+      el.addEventListener('change', sync);
+    });
+    btn.addEventListener('click', () => openRangePicker({ fromEl, toEl, btn, title, allowOpen: !!allowOpen }));
+    sync();
+  }
+  function rangeBounds(){
+    // intervallo da evidenziare: quello scelto, oppure l'anteprima mentre si sceglie la fine
+    let a = rangeSt.a, b = rangeSt.b;
+    if (rangeSt.picking && rangeSt.hover) b = rangeSt.hover;
+    if (a && b && b < a) { const t = a; a = b; b = t; }
+    return [a, b];
+  }
+  function paintRange(){
+    const r = rangeBounds(), a = r[0], b = r[1];
+    rangeGridEl.querySelectorAll('.range-day').forEach(el => {
+      const d = el.getAttribute('data-d');
+      const isStart = !!a && d === a, isEnd = !!b && d === b;
+      el.classList.toggle('start', isStart);
+      el.classList.toggle('end', isEnd);
+      el.classList.toggle('alone', (isStart && !b) || (isEnd && !a));
+      el.classList.toggle('in', !!a && !!b && d > a && d < b);
+      el.setAttribute('aria-pressed', (isStart || isEnd) ? 'true' : 'false');
+    });
+    const open = rangeSt.cfg && rangeSt.cfg.allowOpen;
+    document.getElementById('rangeOnlyFrom').style.display = (open && rangeSt.picking) ? '' : 'none';
+    document.getElementById('rangeOnlyTo').style.display = (open && rangeSt.picking) ? '' : 'none';
+    document.getElementById('rangeClear').style.display = (open && !rangeSt.picking && (rangeSt.a || rangeSt.b)) ? '' : 'none';
+    if (rangeSt.picking) rangeStatusEl.innerHTML = 'Inizio: <strong>' + fmtDate(rangeSt.a) + '</strong>. Ora tocca il giorno di fine.';
+    else if (rangeSt.closing) rangeStatusEl.innerHTML = '<strong>' + rangeLabelText(rangeSt.a, rangeSt.b) + '</strong>';
+    else rangeStatusEl.innerHTML = 'Tocca il giorno di inizio, poi quello di fine.' + ((rangeSt.a || rangeSt.b) ? ' Ora: <strong>' + rangeLabelText(rangeSt.a, rangeSt.b) + '</strong>' : '');
+  }
+  function renderRangeMonth(){
+    const y = rangeSt.y, m = rangeSt.m, today = todayISO();
+    document.getElementById('rangeMonth').textContent = MONTHS[m] + ' ' + y;
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < lead; i++) html += '<span></span>';
+    for (let d = 1; d <= days; d++) {
+      const iso = isoFromYMD(y, m, d);
+      html += '<button type="button" class="range-day' + (iso === today ? ' today' : '') + '" data-d="' + iso + '" aria-label="' + d + ' ' + MONTHS[m] + ' ' + y + '">' + d + '</button>';
+    }
+    rangeGridEl.innerHTML = html;
+    paintRange();
+  }
+  function shiftRangeMonth(n){
+    const d = new Date(rangeSt.y, rangeSt.m + n, 1);
+    rangeSt.y = d.getFullYear(); rangeSt.m = d.getMonth();
+    renderRangeMonth();
+  }
+  function openRangePicker(cfg){
+    clearTimeout(rangeSt.timer);
+    rangeSt.cfg = cfg; rangeSt.a = cfg.fromEl.value; rangeSt.b = cfg.toEl.value;
+    rangeSt.picking = false; rangeSt.hover = ''; rangeSt.closing = false;
+    const base = rangeSt.a || rangeSt.b || todayISO();
+    rangeSt.y = Number(base.slice(0, 4)); rangeSt.m = Number(base.slice(5, 7)) - 1;
+    document.getElementById('rangeTitle').textContent = cfg.title;
+    renderRangeMonth();
+    rangeOverlay.classList.add('open');
+    lockBodyScroll();
+  }
+  function closeRangePicker(){
+    if (!rangeOverlay.classList.contains('open')) return;
+    clearTimeout(rangeSt.timer);
+    rangeOverlay.classList.remove('open');
+    unlockBodyScroll();
+    const cfg = rangeSt.cfg; rangeSt.cfg = null;
+    if (cfg && cfg.btn) { try { cfg.btn.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  function applyRange(from, to){
+    const cfg = rangeSt.cfg;
+    if (!cfg) return;
+    cfg.fromEl.value = from; cfg.toEl.value = to;
+    cfg.fromEl.dispatchEvent(new Event('change', { bubbles: true })); // stesso segnale di quando si cambiava la data a mano
+    closeRangePicker();
+  }
+  rangeGridEl.addEventListener('click', (e) => {
+    const el = e.target.closest ? e.target.closest('.range-day') : null;
+    if (!el || rangeSt.closing) return;
+    const d = el.getAttribute('data-d');
+    if (!rangeSt.picking) { rangeSt.a = d; rangeSt.b = ''; rangeSt.hover = ''; rangeSt.picking = true; paintRange(); return; }
+    let a = rangeSt.a, b = d;
+    if (b < a) { const t = a; a = b; b = t; }
+    rangeSt.a = a; rangeSt.b = b; rangeSt.picking = false; rangeSt.hover = ''; rangeSt.closing = true;
+    paintRange();
+    rangeSt.timer = setTimeout(() => applyRange(a, b), 420); // un attimo per vedere l'intervallo evidenziato
+  });
+  rangeGridEl.addEventListener('mouseover', (e) => {
+    if (!rangeSt.picking) return;
+    const el = e.target.closest ? e.target.closest('.range-day') : null;
+    const d = el ? el.getAttribute('data-d') : '';
+    if (d !== rangeSt.hover) { rangeSt.hover = d; paintRange(); }
+  });
+  (function(){ // cambio mese anche col dito, come nel calendario principale
+    let x0 = null, y0 = 0;
+    rangeGridEl.addEventListener('touchstart', (e) => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+    rangeGridEl.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+      if (Math.abs(dx) >= 56 && Math.abs(dx) > Math.abs(dy) * 1.5 && !rangeSt.closing) shiftRangeMonth(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  })();
+  document.getElementById('rangePrev').addEventListener('click', () => { if (!rangeSt.closing) shiftRangeMonth(-1); });
+  document.getElementById('rangeNext').addEventListener('click', () => { if (!rangeSt.closing) shiftRangeMonth(1); });
+  document.getElementById('rangeCancel').addEventListener('click', closeRangePicker);
+  document.getElementById('rangeClear').addEventListener('click', () => applyRange('', ''));
+  document.getElementById('rangeOnlyFrom').addEventListener('click', () => applyRange(rangeSt.a, ''));
+  document.getElementById('rangeOnlyTo').addEventListener('click', () => applyRange('', rangeSt.a));
+  rangeOverlay.addEventListener('click', (e) => { if (e.target === rangeOverlay) closeRangePicker(); });
+  setupRangeField('periodFrom', 'periodTo', 'Periodo dei KPI', false);
+  setupRangeField('costsFrom', 'costsTo', 'Periodo dei costi extra', false);
+  setupRangeField('exportFrom', 'exportTo', 'Periodo da esportare', false);
+  setupRangeField('bookingsFilterFrom', 'bookingsFilterTo', 'Periodo delle prenotazioni', true);
+
   const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (costOverlay.classList.contains('open')) closeCostModal();
+    if (rangeOverlay.classList.contains('open')) closeRangePicker();
+    else if (costOverlay.classList.contains('open')) closeCostModal();
     else if (cleaningOverlay.classList.contains('open')) closeCleaningModal();
     else if (overlay.classList.contains('open')) closeModal();
   });
